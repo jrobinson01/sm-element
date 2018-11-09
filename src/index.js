@@ -1,7 +1,7 @@
-import SMComponent from './lib/sm-component.js';
+import SMElement from './lib/sm-element.js';
 import {html, render} from '../node_modules/lit-html/lit-html.js';
 
-class MyComponent extends SMComponent {
+class MyComponent extends SMElement {
 
   static get machine() {
     return {
@@ -86,7 +86,6 @@ class MyComponent extends SMComponent {
   }
 
   render({color}) {
-    console.log('rendering');
     return html`
     <style>
       div {

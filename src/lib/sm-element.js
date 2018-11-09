@@ -21,19 +21,15 @@ function serializeAttribute(prop) {
 }
 
 
-export default class SMComponent extends HTMLElement {
+export default class SMElement extends HTMLElement {
 
   constructor() {
-    console.log('constructor!');
     super();
     this.__data = {};
-    // this.__propNamesAndAttributeNames = new Map(); // weird, the getter for observedAttributes is called before the constructor, so this gets defined there.
     this.currentState = null;
     this.initialState = null;
     this.state;
     this.states = this.constructor.machine.states;
-    // TODO: deal with observed attributes
-    // ...
     // initialze the machine
     this.initializeState_(this.getStateByName_(this.constructor.machine.initial));
     // setup property getter/setters
@@ -120,7 +116,6 @@ export default class SMComponent extends HTMLElement {
     // only update property if it's different!
     const value = this.constructor.properties[propName]['type'](newVal);
     if (propName && value !== this[propName]) {
-      console.log('udating prop from attribute:', propName, this[propName], value);
       this[propName] = value;
     }
   }
@@ -235,9 +230,6 @@ export default class SMComponent extends HTMLElement {
       console.error(`transitionTo_ called with no State`);
       return;
     }
-    // if (newState === this.currentState) {
-    //   this._setState('');// trigger 'change' in polymer
-    // }
     // call onExit if exists
     if (this.currentState && this.currentState.onExit) {
       this.currentState.onExit.call(this);
@@ -256,5 +248,3 @@ export default class SMComponent extends HTMLElement {
   }
 
 };
-
-// SMComponent.prototype.__propNamesAndAttributeNames = new Map();
