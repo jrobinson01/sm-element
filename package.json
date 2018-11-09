@@ -1,12 +1,12 @@
 {
-  "name": "vcomponents",
-  "version": "1.0.0",
-  "description": "",
+  "name": "smelement",
+  "version": "0.0.1",
+  "description": "state machine backed custom elements with lit-html rendering",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "jrobinsonmedia@gmail.com",
   "license": "ISC",
   "dependencies": {
     "lit-html": "^0.12.0"
