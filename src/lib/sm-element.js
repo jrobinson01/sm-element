@@ -1,9 +1,3 @@
-/*
- * TODO:
- * reflectToAttribute - convert property names (camelCase most likely) to dash-case
- * observed attributes (does lit handle this for us?)
- */
-
 import {html, render} from '../../node_modules/lit-html/lit-html.js';
 
 function serializeAttribute(prop) {
@@ -25,15 +19,17 @@ export default class SMElement extends HTMLElement {
 
   constructor() {
     super();
+    this.attachShadow({mode: 'open'});
     this.__data = {};
-    this.currentState = null;
-    this.initialState = null;
-    this.state;
+    this.currentState;
+    this.state__;
     this.states = this.constructor.machine.states;
-    // initialze the machine
-    this.initializeState_(this.getStateByName_(this.constructor.machine.initial));
     // setup property getter/setters
     this.initializeProps_(this.constructor.properties);
+    // initialze data
+    this.initializeData_(this.constructor.properties);
+    // initialze the machine
+    this.initializeState_(this.getStateByName_(this.constructor.machine.initial));
   }
 
   static get machine() {
@@ -47,18 +43,14 @@ export default class SMElement extends HTMLElement {
       }
     };
   }
-  // Should there be a separation between properties and data?
-  // properties = things set from the outside
-  // data = internal data passed to render
-  // examples??
-  // ...
+
   static get properties() {
-    // returns the data structure (like polymer properties)
+    // returns the data structure (a lot like polymer/lit-element properties)
     return {};
   }
 
   static get observedAttributes() {
-    // for now, everything is observed!
+    // for now, everything is observed
     const attributes = [];
     if (!this.__propNamesAndAttributeNames) {
       this.__propNamesAndAttributeNames = new Map();
@@ -71,17 +63,27 @@ export default class SMElement extends HTMLElement {
     return attributes;
   }
 
+  get state() {
+    return this.__state;
+  }
+
+  set state(state) {
+    this.__state = state;
+    this.setAttribute('state', this.__state);
+  }
+
   get data() {
     return this.__data;
   }
 
-  // setter for *all* data
+  // setter for data
   set data(newData) {
-    // TODO: does not currently deal with nested objects/arrays!
-    // ...
+
     // reflect any attributes that need to be reflected (reflect === true)
     // and dispatch any events (notify === true)
     // update internal state
+    // TODO: does not currently deal with nested objects/arrays!
+    // ...
     this.__data = Object.assign({}, this.__data, newData);
     for(let key in newData) {
       if (this.constructor.properties[key].reflect) {
@@ -89,7 +91,7 @@ export default class SMElement extends HTMLElement {
         if (attribute === null) {
           this.removeAttribute(key);
         } else {
-          this.setAttribute(key, attribute);//TODO: currently triggering an additional render call due to attribute being observed!
+          this.setAttribute(key, attribute);
         }
       }
       if (this.constructor.properties[key].notify) {
@@ -102,34 +104,22 @@ export default class SMElement extends HTMLElement {
         }));
       }
     }
-
-    // render! (this (or the whole of this setter?)*could/should* be debounced for performance reasons)
-    // don't attempt to render unless we have a shadowRoot
-    if (this.shadowRoot) {
-      render(this.render(this.__data), this.shadowRoot);
-    }
-
+    this.requestRender__();
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     const propName = this.constructor.__propNamesAndAttributeNames.get(name);
-    // only update property if it's different!
+    // only update property if it's changed to prevent infinite loop
     const value = this.constructor.properties[propName]['type'](newVal);
     if (propName && value !== this[propName]) {
       this[propName] = value;
     }
   }
 
-  connectedCallback() {
-    this.attachShadow({mode: 'open'});
-    this.initializeData_(this.constructor.properties);
-  }
-
   initializeData_(properties) {
     // flatten properties and assign
-
     this.data = Object.keys(properties).reduce((acc, k) => {
-      // this happens AFTER props may have been set by attributes so use local prop if exists
+      // this happens AFTER props may have been set so use local prop if exists
       acc[k] = this[k] === undefined ? properties[k].value : this[k];
       return acc;
     }, {});
@@ -158,13 +148,22 @@ export default class SMElement extends HTMLElement {
     }
   }
 
-  isState(current={}, desired={}) {
-    return current.name === desired.name;
+  isState(current, desired) {
+    return Boolean(current && desired && current.name === desired.name);
   }
 
-  // override in sub classes
+  // override in sub classes!
   render(data) {
     return html``;
+  }
+
+  // rendering is async
+  requestRender__() {
+    requestAnimationFrame(() => {
+      if (this.shadowRoot) {
+        render(this.render(this.__data), this.shadowRoot);
+      }
+    });
   }
 
   send(eventName, detail = {}) {
@@ -193,12 +192,12 @@ export default class SMElement extends HTMLElement {
       transitions.some(t => {
         const passed = t.condition.call(this, detail);
         if (passed) {
-          // run the first passing transition
-          // before running, run the transition's effect
+          // before running the transition, run it's effect
           if (t.effect) {
             // update data with return from effect
             this.data = t.effect.call(this, detail);
           }
+          // run the first passing transition
           this.transitionTo_(this.getStateByName_(t.target));
         }
         return passed;// break out of loop if true, before testing more conditions
@@ -208,9 +207,10 @@ export default class SMElement extends HTMLElement {
       const transition = transitions[0];
       const targetState = this.getStateByName_(transition.target);
 
-      // go for it if no condition
+      // go for it, no condition
       if (!transition.condition) {
         if (transition.effect) {
+          // update data with return from effect
           this.data = transition.effect.call(this, detail);
         }
         this.transitionTo_(targetState);
@@ -235,7 +235,7 @@ export default class SMElement extends HTMLElement {
       this.currentState.onExit.call(this);
     }
     this.currentState = newState;
-    // "state" property is readonly, use special polymer method to set
+    // udpate state property
     this.state = newState.name;
     // call onEntry if it exists
     if (newState.onEntry) {

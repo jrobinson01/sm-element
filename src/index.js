@@ -87,25 +87,35 @@ class MyComponent extends SMElement {
 
   render({color}) {
     return html`
-    <style>
-      div {
-        width: 100px;
-        height: 100px;
-        border: 2px solid black;
-        background-color: black;
-        border-radius: 50%;
-      }
-      .green {
-        background-color: green;
-      }
-      .red {
-        background-color: red;
-      }
-      .yellow {
-        background-color: yellow;
-      }
-    </style>
-    <div class="${color}"></div>
+      <style>
+        div {
+          margin: 10px;
+          width: 100px;
+          text-align: center;
+        }
+        #light {
+          width: 100px;
+          height: 100px;
+          border: 4px solid black;
+          background-color: black;
+          border-radius: 50%;
+        }
+        #light.green {
+          background-color: green;
+        }
+        #light.red {
+          background-color: red;
+        }
+        #light.yellow {
+          background-color: yellow;
+        }
+      </style>
+      <div id="light" class="${color}"></div>
+      <div>
+        ${this.isState(this.currentState, this.states.green) ? `don't walk` :
+        this.isState(this.currentState, this.states.yellow) ? `run` :
+        this.isState(this.currentState, this.states.red) ? html`walk` : '' }
+      </div>
     `;
   }
 
