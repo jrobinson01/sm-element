@@ -1,7 +1,7 @@
-import VComponent from './lib/vcomponent.js';
+import SMComponent from './lib/sm-component.js';
 import {html, render} from '../node_modules/lit-html/lit-html.js';
 
-class MyComponent extends VComponent {
+class MyComponent extends SMComponent {
 
   static get machine() {
     return {
@@ -12,7 +12,7 @@ class MyComponent extends VComponent {
           onEntry: function() {
             setTimeout(() => {
               this.send('change');
-            }, 3000);
+            }, this.greenDelay);
           },
           transitions: [
             {
@@ -29,7 +29,7 @@ class MyComponent extends VComponent {
           onEntry: function() {
             setTimeout(() => {
               this.send('change');
-            }, 1000);
+            }, this.yellowDelay);
           },
           transitions: [
             {
@@ -46,7 +46,7 @@ class MyComponent extends VComponent {
           onEntry: function() {
             setTimeout(() => {
               this.send('change');
-            }, 3000);
+            }, this.redDelay);
           },
           transitions: [
             {
@@ -65,12 +65,28 @@ class MyComponent extends VComponent {
   static get properties() {
     return {
       color: {
-        value: 'red',
+        value: 'red',// TODO: setting the initial state does not set properties so this needs to be synced up
+        reflect: true,
+        notify: true,
+        type: String
+      },
+      yellowDelay: {
+        value: 1000,
+        type: Number,
+      },
+      redDelay: {
+        value: 3000,
+        type: Number,
+      },
+      greenDelay: {
+        value: 4000,
+        type: Number
       },
     }
   }
 
   render({color}) {
+    console.log('rendering');
     return html`
     <style>
       div {

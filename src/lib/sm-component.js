@@ -1,21 +1,38 @@
 /*
  * TODO:
- * reflectToAttribute
- * get props from attributes
+ * reflectToAttribute - convert property names (camelCase most likely) to dash-case
+ * observed attributes (does lit handle this for us?)
  */
 
 import {html, render} from '../../node_modules/lit-html/lit-html.js';
 
-export default class VComponent extends HTMLElement {
+function serializeAttribute(prop) {
+  if (typeof prop === 'boolean') {
+    return prop ? '' : null;
+  } else if (typeof prop === 'object') {
+    // what to do with object props?
+    const value = null;
+    try {
+      value = JSON.stringify(prop);
+    } catch(e) {}
+    return value;
+  }
+  return String(prop);
+}
+
+
+export default class SMComponent extends HTMLElement {
 
   constructor() {
+    console.log('constructor!');
     super();
     this.__data = {};
+    // this.__propNamesAndAttributeNames = new Map(); // weird, the getter for observedAttributes is called before the constructor, so this gets defined there.
     this.currentState = null;
     this.initialState = null;
     this.state;
-    // TODO:
-    // deal with attributes (reflected and observed)
+    this.states = this.constructor.machine.states;
+    // TODO: deal with observed attributes
     // ...
     // initialze the machine
     this.initializeState_(this.getStateByName_(this.constructor.machine.initial));
@@ -44,16 +61,68 @@ export default class VComponent extends HTMLElement {
     return {};
   }
 
+  static get observedAttributes() {
+    // for now, everything is observed!
+    const attributes = [];
+    if (!this.__propNamesAndAttributeNames) {
+      this.__propNamesAndAttributeNames = new Map();
+    }
+    for(let key in this.properties) {
+      const aName = key.toLowerCase();
+      this.__propNamesAndAttributeNames.set(aName, key);
+      attributes.push(aName);
+    }
+    return attributes;
+  }
+
   get data() {
     return this.__data;
   }
 
-  // simple setter for all data
+  // setter for *all* data
   set data(newData) {
     // TODO: does not currently deal with nested objects/arrays!
     // ...
-    this.__data = Object.assign({}, newData);
-    render(this.render(this.__data), this.shadowRoot)
+    // reflect any attributes that need to be reflected (reflect === true)
+    // and dispatch any events (notify === true)
+    // update internal state
+    this.__data = Object.assign({}, this.__data, newData);
+    for(let key in newData) {
+      if (this.constructor.properties[key].reflect) {
+        const attribute = serializeAttribute(newData[key]);
+        if (attribute === null) {
+          this.removeAttribute(key);
+        } else {
+          this.setAttribute(key, attribute);//TODO: currently triggering an additional render call due to attribute being observed!
+        }
+      }
+      if (this.constructor.properties[key].notify) {
+        this.dispatchEvent(new CustomEvent(`${key}-changed`, {
+          composed: true,
+          bubbles: false,
+          detail: {
+            value: newData[key]
+          }
+        }));
+      }
+    }
+
+    // render! (this (or the whole of this setter?)*could/should* be debounced for performance reasons)
+    // don't attempt to render unless we have a shadowRoot
+    if (this.shadowRoot) {
+      render(this.render(this.__data), this.shadowRoot);
+    }
+
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    const propName = this.constructor.__propNamesAndAttributeNames.get(name);
+    // only update property if it's different!
+    const value = this.constructor.properties[propName]['type'](newVal);
+    if (propName && value !== this[propName]) {
+      console.log('udating prop from attribute:', propName, this[propName], value);
+      this[propName] = value;
+    }
   }
 
   connectedCallback() {
@@ -62,9 +131,11 @@ export default class VComponent extends HTMLElement {
   }
 
   initializeData_(properties) {
-    // flatten properties
+    // flatten properties and assign
+
     this.data = Object.keys(properties).reduce((acc, k) => {
-      acc[k] = properties[k].value;
+      // this happens AFTER props may have been set by attributes so use local prop if exists
+      acc[k] = this[k] === undefined ? properties[k].value : this[k];
       return acc;
     }, {});
   }
@@ -75,9 +146,8 @@ export default class VComponent extends HTMLElement {
 
   initializeProps_(properties) {
     // create getter/setter pairs for properties
-    for(let key in properties) {
+    const init = (key) => {
       Object.defineProperty(this, key, {
-        // value: properties[key].value,
         get: function() {
           return this.data[key];
         },
@@ -88,6 +158,13 @@ export default class VComponent extends HTMLElement {
         }
       })
     }
+    for(let key in properties) {
+      init(key);
+    }
+  }
+
+  isState(current={}, desired={}) {
+    return current.name === desired.name;
   }
 
   // override in sub classes
@@ -96,7 +173,6 @@ export default class VComponent extends HTMLElement {
   }
 
   send(eventName, detail = {}) {
-    // TODO: first error can probably go away with Closure Compiler in play.
     if (!eventName) {
       throw new Error('an event name is required to send!');
     }
@@ -180,3 +256,5 @@ export default class VComponent extends HTMLElement {
   }
 
 };
+
+// SMComponent.prototype.__propNamesAndAttributeNames = new Map();
