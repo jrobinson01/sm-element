@@ -143,7 +143,7 @@ static get machine() {
 ```
 By adding another state and a few actions and effects, we can start to make the machine more useful. We added the "initial" state. Picture this as the starting point of your component. This could comprise of a simple search form. When the form is submitted, an event is sent to the machine via `this.send('submit_search')`. This triggers the transition to the "loading" state. This new state has an `onEntry` action which kicks off an asynchronous "doSearch" operation. When that operation resolves or rejects, we call send again with the appropriate event. The machine then transitions to the appropriate state (success or error). States can also define an `onExit` action but that is not demonstrated here.
 
-Notice that the transitions have a function labeled "effect". These effects should return any updates we want to make to the components data. Updates to the components data trigger a render call automatically. In this case, we return the results of the search operation on success, and any error messages if the request fails.
+Notice that the transitions have a function labeled "effect". These effects should return any updates we want to make to the components data. Updating the component's data triggers a render call automatically. In this case, we return the results of the search operation on success, and any error messages if the request fails.
 
 Now, suppose the search operation takes a long time, and during the "loading" state, there's a cancel button that when clicked, sends a "cancel_search" event. The loading state honors this event and transitions to the "initial" state. But what happens when that doSearch promise eventually resolves?
 
@@ -151,6 +151,10 @@ Nothing! The "initial" state doesn't care about the "load_success" or "load_erro
 
 ...
 TODO: more examples, explain isState usage inside render, etc.
+
+## Rendering
+Your render function will be called any time the component's data changes. This is quite similar to how Polymer.Element and LitElement components work. Your render function will also be called any time there's a state transition, but will only be called once if both happen in the same frame.
+
 
 _This readme is not complete, but you can check out at a complete [example element](https://github.com/jrobinson01/sm-element/blob/master/index.js)_
 
