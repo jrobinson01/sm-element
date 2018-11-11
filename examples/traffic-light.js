@@ -1,5 +1,5 @@
-import SMElement from './lib/sm-element.js';
-import {html, render} from '../node_modules/lit-html/lit-html.js';
+import SMElement from '../lib/sm-element.js';
+import {html, render} from '../../node_modules/lit-html/lit-html.js';
 
 const style = html `
   <style>
@@ -27,7 +27,7 @@ const style = html `
   </style>
 `;
 
-class MyComponent extends SMElement {
+class TrafficLight extends SMElement {
 
   static get machine() {
     return {
@@ -74,6 +74,7 @@ class MyComponent extends SMElement {
         red: {
           name: 'red',
           onEntry: function() {
+            this.color = 'red';
             this.pedestrianRemover = setInterval(() =>{
               if (this.pedestrianCount >= 1) {
                 // for simplicity, decrease pedestrian count here,
@@ -111,7 +112,6 @@ class MyComponent extends SMElement {
   static get properties() {
     return {
       color: {
-        value: 'red',// TODO: setting the initial state (onEntry) does not set properties so this needs to be synced up
         reflect: true,
         notify: true,
         type: String
@@ -138,21 +138,24 @@ class MyComponent extends SMElement {
   render({color, pedestrianCount}) {
     return html`
       ${style}
-      <div id="light" class="${color}"></div>
+      <div>
+        <div id="light" class="${color}"></div>
+          <div>
+            ${this.isState(this.currentState, this.states.green) ? `don't walk` :
+            this.isState(this.currentState, this.states.yellow) ? `don't walk` :
+            this.isState(this.currentState, this.states.red) ? html`walk` : '' }
+          </div>
         <div>
-          ${this.isState(this.currentState, this.states.green) ? `don't walk` :
-          this.isState(this.currentState, this.states.yellow) ? `don't walk` :
-          this.isState(this.currentState, this.states.red) ? html`walk` : '' }
+          pedestrians: ${pedestrianCount}
         </div>
-      <div>
-      <div>
-        pedestrians: ${pedestrianCount}
+        <div>
+          <button
+            @click="${(event) => this.pedestrianCount += 1 }"
+            .disabled="${this.disableButton()}">
+          add pedestrians
+          </button>
+        </div>
       </div>
-      <button
-        @click="${(event) => this.pedestrianCount += 1 }"
-        .disabled="${this.disableButton()}">
-      add pedestrians
-      </button>
     `;
   }
 
@@ -163,4 +166,4 @@ class MyComponent extends SMElement {
 
 };
 
-customElements.define('my-component', MyComponent);
+customElements.define('traffic-light', TrafficLight);
