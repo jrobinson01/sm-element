@@ -158,7 +158,7 @@ Long story short, state machines are deterministic. They prevent your components
 TODO: more examples, explain isState usage inside render, etc.
 
 ## Rendering
-Your render function will be called any time the component's data changes. This is quite similar to how Polymer.Element and LitElement components work. Your render function will also be called any time there's a state transition, but will only be called once if both happen in the same frame.
+Your render function will be called any time the component's data changes. This is quite similar to how Polymer.Element and LitElement components work. Your render function will also be called any time there's a state transition, but will only be called once if both happen in the same frame. Each individual state can also optionally provide it's own `render` function. The component's `currentStateRender` function will point to the current state's render function for use in your main render function. This is essentially a short-hand alternative to use `isState(...)` and a conditional inside your main render function.
 
 
 _This readme is not complete, but you can check out at a working [example element](https://github.com/jrobinson01/sm-element/blob/master/examples/traffic-light.js)_
@@ -171,3 +171,4 @@ If you want to fiddle around with this project, check out the project, `npm inst
 - `isState(currentState, desiredState)` returns true if `currentState` matches `desiredState`
 - `oneOfState(currentState, ...desiredStates)` returns true if the `currentState` matches one of the `desiredStates`
 - `send(eventName, detailObject)` send an event to the machine with an optional `detail` object
+- `currentStateRender()` a reference to the current state's `render` function. This can be used to render specific UI for the current state.

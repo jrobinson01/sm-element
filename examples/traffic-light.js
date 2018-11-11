@@ -27,24 +27,34 @@ const style = html `
   </style>
 `;
 
+const eventNames = {
+  CHANGE: 'change',
+};
+
+const stateNames = {
+  RED: 'red',
+  YELLOW: 'yellow',
+  GREEN: 'green',
+}
+
 class TrafficLight extends SMElement {
 
   static get machine() {
     return {
-      initial: 'red',
+      initial: stateNames.RED,
       states: {
         green: {
-          name: 'green',
+          name: stateNames.GREEN,
           onEntry() {
             // wait greenDelay ms before sending the change event
             setTimeout(() => {
-              this.send('change');
+              this.send(eventNames.CHANGE);
             }, this.greenDelay);
           },
           transitions: [
             {
-              event: 'change',
-              target: 'yellow',
+              event: eventNames.CHANGE,
+              target: stateNames.YELLOW,
               effect(detail) {
                 return {color: 'yellow'};
               }
@@ -55,20 +65,17 @@ class TrafficLight extends SMElement {
           }
         },
         yellow: {
-          name: 'yellow',
+          name: stateNames.YELLOW,
           onEntry() {
             setTimeout(() => {
-              this.send('change');
+              this.send(eventNames.CHANGE);
             }, this.yellowDelay);
           },
           transitions: [
             {
-              event: 'change',
-              target: 'red',
+              event: eventNames.CHANGE,
+              target: stateNames.RED,
               effect(detail) {
-                // for the sake of a simplified demo, set pedestrian count immediately.
-                // for a more realistic demo, pedestrian count could be controlled by
-                // outside forces. (a button (that is only enabled during red state) could increment)
                 return {color: 'red', pedestrianCount: Math.round(Math.random() * 10)};
               },
             }
@@ -78,40 +85,53 @@ class TrafficLight extends SMElement {
           }
         },
         red: {
-          name: 'red',
+          name: stateNames.RED,
           onEntry() {
             this.color = 'red';
             this.pedestrianRemover = setInterval(() =>{
               if (this.pedestrianCount >= 1) {
                 // for simplicity, decrease pedestrian count here,
-                // but in the real world, this would be
+                // but in the real world, this could be
                 // outside our control.
                 this.pedestrianCount -= 1;
               } else {
                 // need to clear interval now, since it may run again,
-                // and trigger another change (all states respond to change event)
+                // and trigger another 'change' before we run out of pedestrians
+                // (since all states respond to the 'change' event)
                 clearInterval(this.pedestrianRemover);
                 setTimeout(() => {
-                  this.send('change');
+                  this.send(eventNames.CHANGE);
                 }, this.redDelay);
               }
             }, 500);
           },
           transitions: [
             {
-              event: 'change',
-              target: 'green',
+              event: eventNames.CHANGE,
+              target: stateNames.GREEN,
               effect(detail) {
                 return {color: 'green'};
               },
               condition(detail) {
-                // only transition to green, if there are no more pedestrians
+                // only transition to green if there are no more pedestrians
                 return this.pedestrianCount === 0;
               },
             },
           ],
           render() {
-            return 'walk';
+            return html`
+              walk
+              <div>
+                pedestrians: ${this.pedestrianCount}
+              </div>
+              <div>
+                <button
+                  @click="${(event) => this.pedestrianCount += 1}"
+                  .disabled="${this.pedestrianCount <= 0}">
+                add pedestrians
+                </button>
+              </div>
+            `;
           }
         },
       },
@@ -143,7 +163,7 @@ class TrafficLight extends SMElement {
       }
     }
   }
-
+  // the component's `data` property is passed to render
   render({color, pedestrianCount}) {
     return html`
       ${style}
@@ -153,23 +173,8 @@ class TrafficLight extends SMElement {
             <!-- use the currentStateRender -->
             ${this.currentStateRender()}
           </div>
-        <div>
-          pedestrians: ${pedestrianCount}
-        </div>
-        <div>
-          <button
-            @click="${(event) => this.pedestrianCount += 1 }"
-            .disabled="${this.disableButton()}">
-          add pedestrians
-          </button>
-        </div>
       </div>
     `;
-  }
-
-  disableButton() {
-    return this.pedestrianCount <= 0 ||
-      !this.isState(this.currentState, this.states.red);
   }
 
 };
