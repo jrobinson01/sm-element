@@ -1,9 +1,13 @@
 {
-  "name": "smelement",
+  "name": "sm-element",
   "version": "0.0.1",
   "description": "state machine backed custom element base class, with lit-html rendering",
   "main": "/lib/sm-element.js",
   "module": "/lib/sm-element.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jrobinson01/sm-element.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
