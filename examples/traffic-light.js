@@ -35,7 +35,7 @@ class TrafficLight extends SMElement {
       states: {
         green: {
           name: 'green',
-          onEntry: function() {
+          onEntry() {
             // wait greenDelay ms before sending the change event
             setTimeout(() => {
               this.send('change');
@@ -45,15 +45,18 @@ class TrafficLight extends SMElement {
             {
               event: 'change',
               target: 'yellow',
-              effect: function(detail) {
+              effect(detail) {
                 return {color: 'yellow'};
               }
             }
-          ]
+          ],
+          render() {
+            return `don't walk`;
+          }
         },
         yellow: {
           name: 'yellow',
-          onEntry: function() {
+          onEntry() {
             setTimeout(() => {
               this.send('change');
             }, this.yellowDelay);
@@ -62,18 +65,21 @@ class TrafficLight extends SMElement {
             {
               event: 'change',
               target: 'red',
-              effect: function(detail) {
+              effect(detail) {
                 // for the sake of a simplified demo, set pedestrian count immediately.
                 // for a more realistic demo, pedestrian count could be controlled by
                 // outside forces. (a button (that is only enabled during red state) could increment)
                 return {color: 'red', pedestrianCount: Math.round(Math.random() * 10)};
               },
             }
-          ]
+          ],
+          render() {
+            return `don't walk`;
+          }
         },
         red: {
           name: 'red',
-          onEntry: function() {
+          onEntry() {
             this.color = 'red';
             this.pedestrianRemover = setInterval(() =>{
               if (this.pedestrianCount >= 1) {
@@ -95,15 +101,18 @@ class TrafficLight extends SMElement {
             {
               event: 'change',
               target: 'green',
-              effect: function(detail) {
+              effect(detail) {
                 return {color: 'green'};
               },
-              condition: function(detail) {
+              condition(detail) {
                 // only transition to green, if there are no more pedestrians
                 return this.pedestrianCount === 0;
               },
             },
-          ]
+          ],
+          render() {
+            return 'walk';
+          }
         },
       },
     };
@@ -141,9 +150,8 @@ class TrafficLight extends SMElement {
       <div>
         <div id="light" class="${color}"></div>
           <div>
-            ${this.isState(this.currentState, this.states.green) ? `don't walk` :
-            this.isState(this.currentState, this.states.yellow) ? `don't walk` :
-            this.isState(this.currentState, this.states.red) ? html`walk` : '' }
+            <!-- use the currentStateRender -->
+            ${this.currentStateRender()}
           </div>
         <div>
           pedestrians: ${pedestrianCount}
