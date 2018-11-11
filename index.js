@@ -1,6 +1,32 @@
 import SMElement from './lib/sm-element.js';
 import {html, render} from '../node_modules/lit-html/lit-html.js';
 
+const style = html `
+  <style>
+    div {
+      margin: 10px;
+      width: 100px;
+      text-align: center;
+    }
+    #light {
+      width: 100px;
+      height: 100px;
+      border: 4px solid black;
+      background-color: black;
+      border-radius: 50%;
+    }
+    #light.green {
+      background-color: green;
+    }
+    #light.red {
+      background-color: red;
+    }
+    #light.yellow {
+      background-color: yellow;
+    }
+  </style>
+`;
+
 class MyComponent extends SMElement {
 
   static get machine() {
@@ -10,6 +36,7 @@ class MyComponent extends SMElement {
         green: {
           name: 'green',
           onEntry: function() {
+            // wait greenDelay ms before sending the change event
             setTimeout(() => {
               this.send('change');
             }, this.greenDelay);
@@ -36,17 +63,32 @@ class MyComponent extends SMElement {
               event: 'change',
               target: 'red',
               effect: function(detail) {
-                return {color: 'red'};
-              }
+                // for the sake of a simplified demo, set pedestrian count immediately.
+                // for a more realistic demo, pedestrian count could be controlled by
+                // outside forces. (a button (that is only enabled during red state) could increment)
+                return {color: 'red', pedestrianCount: Math.round(Math.random() * 10)};
+              },
             }
           ]
         },
         red: {
           name: 'red',
           onEntry: function() {
-            setTimeout(() => {
-              this.send('change');
-            }, this.redDelay);
+            this.pedestrianRemover = setInterval(() =>{
+              if (this.pedestrianCount >= 1) {
+                // for simplicity, decrease pedestrian count here,
+                // but in the real world, this would be
+                // outside our control.
+                this.pedestrianCount -= 1;
+              } else {
+                // need to clear interval now, since it may run again,
+                // and trigger another change (all states respond to change event)
+                clearInterval(this.pedestrianRemover);
+                setTimeout(() => {
+                  this.send('change');
+                }, this.redDelay);
+              }
+            }, 500);
           },
           transitions: [
             {
@@ -54,8 +96,12 @@ class MyComponent extends SMElement {
               target: 'green',
               effect: function(detail) {
                 return {color: 'green'};
-              }
-            }
+              },
+              condition: function(detail) {
+                // only transition to green, if there are no more pedestrians
+                return this.pedestrianCount === 0;
+              },
+            },
           ]
         },
       },
@@ -65,7 +111,7 @@ class MyComponent extends SMElement {
   static get properties() {
     return {
       color: {
-        value: 'red',// TODO: setting the initial state does not set properties so this needs to be synced up
+        value: 'red',// TODO: setting the initial state (onEntry) does not set properties so this needs to be synced up
         reflect: true,
         notify: true,
         type: String
@@ -82,41 +128,37 @@ class MyComponent extends SMElement {
         value: 4000,
         type: Number
       },
+      pedestrianCount: {
+        type: Number,
+        value: 4,
+      }
     }
   }
 
-  render({color}) {
+  render({color, pedestrianCount}) {
     return html`
-      <style>
-        div {
-          margin: 10px;
-          width: 100px;
-          text-align: center;
-        }
-        #light {
-          width: 100px;
-          height: 100px;
-          border: 4px solid black;
-          background-color: black;
-          border-radius: 50%;
-        }
-        #light.green {
-          background-color: green;
-        }
-        #light.red {
-          background-color: red;
-        }
-        #light.yellow {
-          background-color: yellow;
-        }
-      </style>
+      ${style}
       <div id="light" class="${color}"></div>
+        <div>
+          ${this.isState(this.currentState, this.states.green) ? `don't walk` :
+          this.isState(this.currentState, this.states.yellow) ? `don't walk` :
+          this.isState(this.currentState, this.states.red) ? html`walk` : '' }
+        </div>
       <div>
-        ${this.isState(this.currentState, this.states.green) ? `don't walk` :
-        this.isState(this.currentState, this.states.yellow) ? `run` :
-        this.isState(this.currentState, this.states.red) ? html`walk` : '' }
+      <div>
+        pedestrians: ${pedestrianCount}
       </div>
+      <button
+        @click="${(event) => this.pedestrianCount += 1 }"
+        .disabled="${this.disableButton()}">
+      add pedestrians
+      </button>
     `;
+  }
+
+  disableButton() {
+    return this.pedestrianCount <= 0 ||
+      !this.isState(this.currentState, this.states.red);
   }
 
 };
