@@ -4,13 +4,16 @@
   "description": "state machine backed custom element base class, with lit-html rendering",
   "main": "sm-element.js",
   "module": "sm-element.js",
+  "directories": {
+    "test":"test"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/jrobinson01/sm-element.git"
   },
   "scripts": {
     "build": "./node_modules/rollup/bin/rollup -c",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run build && wct"
   },
   "author": "jrobinsonmedia@gmail.com",
   "license": "ISC",
@@ -18,8 +21,10 @@
     "lit-html": "^0.12.0"
   },
   "devDependencies": {
+    "mocha": "^5.2.0",
     "rollup": "^0.67.1",
     "rollup-plugin-node-resolve": "^3.4.0",
+    "wct-browser-legacy": "^1.0.2",
     "web-component-tester": "^6.9.0"
   }
 }

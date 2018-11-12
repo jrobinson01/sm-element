@@ -3,6 +3,7 @@
   "moduleResolution": "node",
   "plugins": {
     "local": {
+      "browsers": ["chrome"],
       "browserOptions": {
         "chrome": [
           "headless",

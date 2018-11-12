@@ -1,17 +1,24 @@
 import resolve from 'rollup-plugin-node-resolve';
 
 export default {
-  input: './lib/sm-element.js',
+  input: 'src/sm-element.js',
   output: {
-    file: 'sm-element.bundled.js',
+    file: 'sm-element.js',
     format: 'esm',
   },
+  external: [
+    'lit-html/lit-html'
+  ],
   onwarn(warning) {
     if (warning.code !== 'CIRCULAR_DEPENDENCY') {
       console.error(`(!) ${warning.message}`);
     }
   },
   plugins: [
-    resolve(),
+    resolve({
+      customResolveOptions: {
+        moduleDirectory:'node_modules',
+      },
+    }),
   ]
 }

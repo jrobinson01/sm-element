@@ -1,4 +1,4 @@
-import {html, render} from 'lit-html/lit-html.js';
+import {render} from 'lit-html/lit-html';
 
 function serializeAttribute(prop) {
   if (typeof prop === 'boolean') {
