@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>sm-element tests</title>
+  <script src="../node_modules/web-component-tester/browser.js"></script>
+</head>
+<body>
+  <script>
+    WCT.loadSuites([
+      'runner.html',
+      'runner.html?wc-shadydom=true',
+      'runner.html?wc-shadydom=true&wc-ce=true',
+      'runner.html?wc-shadydom=true&wc-ce=true&wc-shimcssproperties=true',
+    ]);
+  </script>
+</body>
+</html>
