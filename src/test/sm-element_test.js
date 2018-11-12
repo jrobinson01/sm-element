@@ -22,7 +22,7 @@ suite('SMElement', () => {
     container.appendChild(element);
     await new Promise((resolve) => {
       assert.ok(el.shadowRoot);
-      assert.equal(el.shadowRoot.innerText),'hello');
+      assert.equal(el.shadowRoot.innerText,'hello');
       resolve();
     });
   });
