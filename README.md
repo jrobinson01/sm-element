@@ -12,11 +12,11 @@ SMElement is heavily inspired by [Polymer](https://www.polymer-project.org) and 
 
 # How it works
 
-To use SMElement, you extend the SMElement class just like you would Polymer.Element or LitElement. You also define a static properties getter and a render function.
+You extend the SMElement class just like you would Polymer.Element or LitElement.
 
 # Defining a machine
 
-To define your machine, you define a static `machine` getter that returns your state machine object. The `machine` getter might look like so:
+You also need to define a static `machine` getter that returns your state machine object. The `machine` getter might look like so:
 ```js
 static get machine() {
   return {
@@ -152,10 +152,9 @@ Now, suppose the search operation takes a long time, and during the "loading" st
 
 Nothing! The "initial" state doesn't care about the "load_success" or "load_error" events. The result is that the component's data is NOT changed, and no odd errors are shown to the user for an operation they bailed out of a long time ago.
 
-Long story short, state machines are deterministic. They prevent your components from getting into unknown, unplanned or un-thought-of states.
+## Conditions
+Transitions can also provide a condition function. If provided, this function will be run when the machine receives an event is handles. The transition will only continue if this function returns true. This is useful when you want to handle the same event different ways. For example, in the fictitious search component above, if the search results came back empty, you might want to move to an "empty_list" state instead of the "results" state. If multiple transitions are defined with the same event, they must all provide a condition (this may change in future versions). The first transition who's condition returns true will be taken.
 
-...
-TODO: more examples, explain isState usage inside render, etc.
 
 ## Rendering
 Your render function will be called any time the component's data changes. This is quite similar to how Polymer.Element and LitElement components work. Your render function will also be called any time there's a state transition, but will only be called once if both happen in the same frame. Each individual state can also optionally provide it's own `render` function. The component's `currentStateRender` function will point to the current state's render function for use in your main render function. This is essentially a short-hand alternative to use `isState(...)` and a conditional inside your main render function. In fact, the default render function in the super class will render your state's ui automatically if you don't provide a render function in your subclass.
