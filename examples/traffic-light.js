@@ -1,5 +1,5 @@
 import SMElement from '../lib/sm-element.js';
-import {html, render} from '../../node_modules/lit-html/lit-html.js';
+import {html, render} from 'lit-html/lit-html.js';
 
 const style = html `
   <style>

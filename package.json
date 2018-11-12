@@ -2,13 +2,14 @@
   "name": "sm-element",
   "version": "0.0.1",
   "description": "state machine backed custom element base class, with lit-html rendering",
-  "main": "/lib/sm-element.js",
-  "module": "/lib/sm-element.js",
+  "main": "sm-element.js",
+  "module": "sm-element.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/jrobinson01/sm-element.git"
   },
   "scripts": {
+    "build": "./node_modules/rollup/bin/rollup -c",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "jrobinsonmedia@gmail.com",
@@ -16,5 +17,9 @@
   "dependencies": {
     "lit-html": "^0.12.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "rollup": "^0.67.1",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "web-component-tester": "^6.9.0"
+  }
 }
