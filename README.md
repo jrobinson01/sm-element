@@ -163,7 +163,7 @@ Your render function will be called any time the component's data changes. This 
 
 _This readme is not complete, but you can check out at a working [example element](https://github.com/jrobinson01/sm-element/blob/master/examples/traffic-light.js)_
 
-If you want to fiddle around with this project, check out the project, `npm install`, and then serve it with your web server of choice. I use [http-server](https://www.npmjs.com/package/http-server)
+If you want to fiddle around with this project, check out the project, `npm install`, and then serve it with `polymer serve`.
 
 ## API
 
@@ -171,4 +171,4 @@ If you want to fiddle around with this project, check out the project, `npm inst
 - `isState(currentState, desiredState)` returns true if `currentState` matches `desiredState`
 - `oneOfState(currentState, ...desiredStates)` returns true if the `currentState` matches one of the `desiredStates`
 - `send(eventName, detailObject)` send an event to the machine with an optional `detail` object
-- `currentStateRender()` a reference to the current state's `render` function. This can be used to render specific UI for the current state.
+- `currentStateRender(data)` a reference to the current state's `render` function. This can be used to render specific UI for the current state.
