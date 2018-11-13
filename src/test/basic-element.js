@@ -1,4 +1,4 @@
-import SMElement from '/sm-element.js';
+import SMElement from '../sm-element.js';
 import {html} from 'lit-html/lit-html';
 
 export default class BasicElement extends SMElement {
@@ -33,9 +33,7 @@ export default class BasicElement extends SMElement {
   }
 
   render() {
-    const template = html`hello`;
-    console.log('rendering ', template);
-    return template;
+    return html`hello basic!`;
   }
 }
 

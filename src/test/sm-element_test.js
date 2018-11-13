@@ -17,10 +17,7 @@ describe('SMElement', () => {
     const el = document.createElement('basic-element');
     container.appendChild(el);
     window.requestAnimationFrame(() => {
-      // WTF. basic-element works fine in the browser,
-      // but el.shadowRoot.textContent === [Object object] when running tests.
-      // ...
-      expect(el.shadowRoot.textContent).to.equal('hello!');
+      expect(el.shadowRoot.textContent).to.equal('hello basic!');
       done();
     });
   });
