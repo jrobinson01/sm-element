@@ -1,5 +1,5 @@
-import {SMElement} from '../sm-element.js';
-import {html, render} from '../../node_modules/lit-html/lit-html.js';
+import SMElement from '/sm-element.js';
+import {html} from 'lit-html/lit-html';
 
 export default class BasicElement extends SMElement {
   static get machine() {
@@ -22,7 +22,7 @@ export default class BasicElement extends SMElement {
               event: 'toggle',
               target: 'on'
             },
-          ]l
+          ],
         },
       },
     };
@@ -32,8 +32,10 @@ export default class BasicElement extends SMElement {
     return {};
   }
 
-  render(data) {
-    return html `hello!`;
+  render() {
+    const template = html`hello`;
+    console.log('rendering ', template);
+    return template;
   }
 }
 

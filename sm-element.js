@@ -1,4 +1,4 @@
-import {render} from 'lit-html/lit-html';
+import { render } from 'lit-html/lit-html';
 
 function serializeAttribute(prop) {
   if (typeof prop === 'boolean') {
@@ -15,7 +15,7 @@ function serializeAttribute(prop) {
 }
 
 
-export default class SMElement extends HTMLElement {
+class SMElement extends HTMLElement {
 
   constructor() {
     super();
@@ -160,8 +160,8 @@ export default class SMElement extends HTMLElement {
           update[key] = newVal;
           this.data = update;
         }
-      })
-    }
+      });
+    };
     for(let key in properties) {
       init(key);
     }
@@ -274,4 +274,6 @@ export default class SMElement extends HTMLElement {
     return Object.values(this.constructor.machine.states).find(s => s.name === name) || null;
   }
 
-};
+}
+
+export default SMElement;

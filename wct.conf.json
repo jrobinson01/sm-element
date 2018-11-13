@@ -1,12 +1,13 @@
 {
   "npm": true,
+  "persistent":"true",
   "moduleResolution": "node",
+  "verbose": "true",
   "plugins": {
     "local": {
       "browsers": ["chrome"],
       "browserOptions": {
         "chrome": [
-          "headless",
           "disable-gpu",
           "no-sandbox"
         ],

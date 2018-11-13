@@ -1,29 +1,40 @@
-import {SMElement} from '../sm-element.js';
-import {html, render} from '../../node_modules/lit-html/lit-html.js';
-import {BasicElement} from 'basic-element.js';
+import BasicElement from './basic-element.js';
 
-const assert = chai.assert;
-
-suite('SMElement', () => {
+describe('SMElement', () => {
   let container = HTMLElement;
-  setup(() => {
+  before(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
   });
 
-  teardown(() => {
+  after(() => {
     if(container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
   });
 
-  test ('renders initial content into shadowRoot', async () => {
-    const element = document.createElement('my-element');
-    container.appendChild(element);
-    await new Promise((resolve) => {
-      assert.ok(el.shadowRoot);
-      assert.equal(el.shadowRoot.innerText,'hello');
-      resolve();
+  it('renders initial content into shadowRoot', done => {
+    const el = document.createElement('basic-element');
+    container.appendChild(el);
+    window.requestAnimationFrame(() => {
+      // WTF. basic-element works fine in the browser,
+      // but el.shadowRoot.textContent === [Object object] when running tests.
+      // ...
+      expect(el.shadowRoot.textContent).to.equal('hello!');
+      done();
     });
+  });
+
+  it('should set the initial state', () => {
+    const el = document.createElement('basic-element');
+    container.appendChild(el);
+    expect(el.currentState.name).to.equal(el.states.on.name);
+  });
+
+  it('send should transition to another state', () => {
+    const el = document.createElement('basic-element');
+    container.appendChild(el);
+    el.send('toggle');
+    expect(el.currentState.name).to.equal(el.states.off.name);
   });
 });
