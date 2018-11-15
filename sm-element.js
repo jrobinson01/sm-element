@@ -2,18 +2,15 @@ import { render } from 'lit-html/lit-html';
 
 function serializeAttribute(prop) {
   if (typeof prop === 'boolean') {
-    return prop ? '' : null;
+    return (prop === true) ? '' : null;
   } else if (typeof prop === 'object') {
-    // what to do with object props?
-    const value = null;
-    try {
-      value = JSON.stringify(prop);
-    } catch(e) {}
-    return value;
+    throw new Error('cannot serialize object to attribute');
+    return null;
+  } else if (prop === undefined) {
+    return null;
   }
   return String(prop);
 }
-
 
 class SMElement extends HTMLElement {
 
@@ -83,9 +80,7 @@ class SMElement extends HTMLElement {
   set data(newData) {
     // reflect any attributes that need to be reflected (reflect === true)
     // and dispatch any events (notify === true)
-    // update internal state
-    // TODO: does not currently deal with nested objects/arrays!
-    // ...
+    // update internal data allowing for partial updates
     this.__data = Object.assign({}, this.__data, newData);
     for(let key in newData) {
       const cprop = this.constructor.properties[key];
@@ -94,7 +89,7 @@ class SMElement extends HTMLElement {
         if (attribute === null) {
           this.removeAttribute(key);
         } else {
-          this.setAttribute(key, attribute);
+          this.setAttribute(key.toLowerCase(), attribute);
         }
       }
       if (cprop.notify) {
@@ -128,53 +123,24 @@ class SMElement extends HTMLElement {
 
   attributeChangedCallback(name, oldVal, newVal) {
     const propName = this.constructor.__propNamesAndAttributeNames.get(name);
+    const type = this.constructor.properties[propName]['type'] || String;
+    let value;
+    if (type === Boolean) {
+      if (newVal === ''){
+        value = true;
+      } else if (newVal === 'false') {
+        value = false;
+      } else {
+        value = Boolean(newVal);
+      }
+
+    } else {
+      value = type(newVal);
+    }
     // only update property if it's changed to prevent infinite loop
-    const value = this.constructor.properties[propName]['type'](newVal);
     if (propName && value !== this[propName]) {
       this[propName] = value;
     }
-  }
-
-  initializeData_(properties) {
-    // flatten properties and assign
-    this.data = Object.keys(properties).reduce((acc, k) => {
-      // this happens AFTER props may have been set so use local prop if exists
-      acc[k] = this[k] !== undefined ? this[k]: properties[k].value;
-      return acc;
-    }, {});
-  }
-
-  initializeMachine_(initial) {
-    this.transitionTo_(initial);
-  }
-
-  initializeProps_(properties) {
-    // create getter/setter pairs for properties
-    const init = (key) => {
-      Object.defineProperty(this, key, {
-        get: function() {
-          return this.data[key];
-        },
-        set: function(newVal) {
-          const update = {};
-          update[key] = newVal;
-          this.data = update;
-        }
-      });
-    };
-    for(let key in properties) {
-      init(key);
-    }
-  }
-
-  // request a render on the next animation frame
-  requestRender__() {
-    cancelAnimationFrame(this.renderRequest__);
-    this.renderRequest__ = requestAnimationFrame(() => {
-      if (this.root) {
-        render(this.render(this.__data), this.root);
-      }
-    });
   }
 
   isState(current, desired) {
@@ -182,7 +148,7 @@ class SMElement extends HTMLElement {
   }
 
   oneOfState(state, ...states) {
-    return states.includes(state);
+    return Boolean(states && states.includes(state));
   }
 
   // override in sub classes, default
@@ -232,22 +198,20 @@ class SMElement extends HTMLElement {
       const transition = transitions[0];
       const targetState = this.getStateByName_(transition.target);
 
-      // go for it, no condition
-      if (!transition.condition) {
+      // no condition, or condition returns true
+      if (!transition.condition || (transition.condition && transition.condition.call(this, detail))) {
         if (transition.effect) {
           // update data with return from effect
           this.data = transition.effect.call(this, detail);
         }
         this.transitionTo_(targetState);
-      } else if (transition.condition.call(this, detail)) {
-        // if the transition does have a condition,
-        // transitionTo_ if it returns true
-        if (transition.effect) {
-          this.data = transition.effect.call(this, detail);
-        }
-        this.transitionTo_(targetState);
       }
     }
+  }
+
+  // convenience for setting event listeners that send
+  listenAndSend(eventName, detail) {
+    return (event) => this.send(eventName, detail);
   }
 
   transitionTo_(newState) {
@@ -272,6 +236,50 @@ class SMElement extends HTMLElement {
 
   getStateByName_(name) {
     return Object.values(this.constructor.machine.states).find(s => s.name === name) || null;
+  }
+
+  initializeData_(properties) {
+    // flatten properties and assign
+    this.data = Object.keys(properties).reduce((acc, k) => {
+      // this happens AFTER props may have been set so use local prop if exists
+      // TODO: if value is a function, run it and use it's return value!
+      // ...
+      acc[k] = this[k] !== undefined ? this[k]: properties[k].value;
+      return acc;
+    }, {});
+  }
+
+  initializeMachine_(initial) {
+    this.transitionTo_(initial);
+  }
+
+  initializeProps_(properties) {
+    // create getter/setter pairs for properties
+    const init = (key) => {
+      Object.defineProperty(this, key, {
+        get: function() {
+          return this.data[key];
+        },
+        set: function(newVal) {
+          const update = {};
+          update[key] = newVal;
+          this.data = update;
+        }
+      });
+    };
+    for(let key in properties) {
+      init(key);
+    }
+  }
+
+  // request a render on the next animation frame
+  requestRender__() {
+    cancelAnimationFrame(this.renderRequest__);
+    this.renderRequest__ = requestAnimationFrame(() => {
+      if (this.root) {
+        render(this.render(this.__data), this.root);
+      }
+    });
   }
 
 }

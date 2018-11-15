@@ -24,12 +24,38 @@ export default class BasicElement extends SMElement {
             },
           ],
         },
+        other: {
+          name: 'other',
+          transitions: [
+            {
+              event: 'reset',
+              target: 'on'
+            },
+          ],
+        },
       },
     };
   }
 
   static get properties() {
-    return {};
+    return {
+      foo:{
+        type: String,
+        reflect: true,
+        notify: true,
+      },
+      bar: {
+        type: String,
+      },
+      baz: {
+        type: Boolean,
+        reflect: true,
+      },
+      fooBar: {
+        type: String,
+        reflect: true,
+      }
+    };
   }
 
   render() {
