@@ -172,3 +172,4 @@ If you want to fiddle around with this project, check out the project, `npm inst
 - `send(eventName, detailObject)` send an event to the machine with an optional `detail` object
 - `currentStateRender(data)` a reference to the current state's `render` function. This can be used to render specific UI for the current state.
 - `createRenderRoot()` override to set a customer render target. Defaults to creating a shadowRoot
+- `renderNow(data)` forces an immediate render

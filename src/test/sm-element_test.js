@@ -1,8 +1,8 @@
 import BasicElement from './basic-element.js';
+import {html} from 'lit-html/lit-html';
 
 describe('SMElement', () => {
   let container = HTMLElement;
-
   let el;
 
   before(() => {
@@ -99,6 +99,25 @@ describe('SMElement', () => {
         done();
       });
     });
+
+    it('should render after properties and state are up to date', done => {
+      el.render = function(data) {
+        return html`${this.state}`;
+      };
+      el.send('toggle');
+      window.requestAnimationFrame(() => {
+        expect(el.shadowRoot.textContent).to.equal('off');
+        done();
+      });
+    });
+
+    it('should render immediately if renderNow is called', () => {
+      el.render = function(data) {
+        return html`immediate`;
+      }
+      el.renderNow();
+      expect(el.shadowRoot.textContent).to.equal('immediate');
+    })
   });
 
   describe('state management', () => {

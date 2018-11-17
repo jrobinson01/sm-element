@@ -1,5 +1,3 @@
-// @js-check
-
 import {TemplateResult, render} from 'lit-html/lit-html';
 
 /**
@@ -294,7 +292,7 @@ export default class SMElement extends HTMLElement {
 
   /** @param {!object} properties */
   initializeProps_(properties) {
-    // create getter/setter pairs for properties
+    // create getter/setter pairs for each property
     const init = (key) => {
       Object.defineProperty(this, key, {
         get: function() {
@@ -312,7 +310,7 @@ export default class SMElement extends HTMLElement {
     }
   }
 
-  // request a render on the next animation frame
+  /** @description request a render on the next animation frame */
   requestRender__() {
     cancelAnimationFrame(this.__renderRequest);
     this.__renderRequest = requestAnimationFrame(() => {
@@ -320,6 +318,10 @@ export default class SMElement extends HTMLElement {
         render(this.render(this.__data), this.root);
       }
     });
+  }
+  /** @description force a render immediately */
+  renderNow() {
+    render(this.render(this.__data), this.root);
   }
 
 };

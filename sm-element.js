@@ -1,5 +1,10 @@
 import { render } from 'lit-html/lit-html';
 
+/**
+ * @description serializes property to a valid attribute
+ * @param {string|boolean} prop
+ * @return {?string}
+ */
 function serializeAttribute(prop) {
   if (typeof prop === 'boolean') {
     return (prop === true) ? '' : null;
@@ -12,26 +17,26 @@ function serializeAttribute(prop) {
   return String(prop);
 }
 
+/**
+ * @extends {HTMLElement}
+ */
 class SMElement extends HTMLElement {
 
   constructor() {
     super();
     this.__data = {};
     this.currentState;
-    this.state__;
+    this.__state;
     this.root;
-    this.renderRequest__;
+    this.__renderRequest;
     this.states = this.constructor.machine.states;
     // setup render target
     this.createRenderRoot();
-    // // setup property getter/setters
-    // this.initializeProps_(this.constructor.properties);
-    // // initialze data
-    // this.initializeData_(this.constructor.properties);
-    // // initialze the machine
-    // this.initializeMachine_(this.getStateByName_(this.constructor.machine.initial));
+    // setup property getter/setters
+    this.initializeProps_(this.constructor.properties);
   }
 
+  /** @return {object} */
   static get machine() {
     // return a basic state machine
     return {
@@ -44,6 +49,7 @@ class SMElement extends HTMLElement {
     };
   }
 
+  /** @return {object} */
   static get properties() {
     // returns the data structure (a lot like polymer/lit-element properties)
     return {};
@@ -51,32 +57,39 @@ class SMElement extends HTMLElement {
 
   static get observedAttributes() {
     // for now, every property is observed
+    // should only attributes that are reflected be observed?
+    // ...
     const attributes = [];
     if (!this.__propNamesAndAttributeNames) {
       this.__propNamesAndAttributeNames = new Map();
     }
     for(let key in this.properties) {
-      const aName = key.toLowerCase();
-      this.__propNamesAndAttributeNames.set(aName, key);
-      attributes.push(aName);
+      // if (this.properties[key].reflect) { // should only attributes that are reflected, be observed?
+        const aName = key.toLowerCase();
+        this.__propNamesAndAttributeNames.set(aName, key);
+        attributes.push(aName);
+      // }
     }
     return attributes;
   }
 
+  /** @return {string} */
   get state() {
     return this.__state;
   }
 
+  /** @param {string} state */
   set state(state) {
     this.__state = state;
     this.setAttribute('state', this.__state);
   }
 
+  /** @return {object} */
   get data() {
     return this.__data;
   }
 
-  // setter for data
+  /** @param {object} */
   set data(newData) {
     // reflect any attributes that need to be reflected (reflect === true)
     // and dispatch any events (notify === true)
@@ -94,8 +107,6 @@ class SMElement extends HTMLElement {
       }
       if (cprop.notify) {
         this.dispatchEvent(new CustomEvent(`${key}-changed`, {
-          composed: true,
-          bubbles: false,
           detail: {
             value: newData[key]
           }
@@ -106,8 +117,6 @@ class SMElement extends HTMLElement {
   }
 
   connectedCallback() {
-    // setup property getter/setters
-    this.initializeProps_(this.constructor.properties);
     // initialze data
     this.initializeData_(this.constructor.properties);
     // initialze the machine
@@ -115,12 +124,17 @@ class SMElement extends HTMLElement {
   }
 
   /**
-   * creates a shadowRoot by default. override to use a different render target
+   * @description creates a shadowRoot by default. override to use a different render target
    */
   createRenderRoot() {
     this.root = this.attachShadow({mode:'open'});
   }
 
+  /**
+   * @param {string} name
+   * @param {string} oldVal
+   * @param {string} newVal
+   */
   attributeChangedCallback(name, oldVal, newVal) {
     const propName = this.constructor.__propNamesAndAttributeNames.get(name);
     const type = this.constructor.properties[propName]['type'] || String;
@@ -133,30 +147,47 @@ class SMElement extends HTMLElement {
       } else {
         value = Boolean(newVal);
       }
-
     } else {
       value = type(newVal);
     }
     // only update property if it's changed to prevent infinite loop
+    // with reflected properties.
     if (propName && value !== this[propName]) {
       this[propName] = value;
     }
   }
 
+  /**
+   * @param {!object} current
+   * @param {!object} desired
+   * @return {boolean}
+   */
   isState(current, desired) {
     return Boolean(current && desired && current.name === desired.name);
   }
 
-  oneOfState(state, ...states) {
-    return Boolean(states && states.includes(state));
+  /**
+   * @param {!object} current
+   * @param {...object} states
+   * @return {boolean}
+   */
+  oneOfState(current, ...states) {
+    return Boolean(states && states.includes(current));
   }
 
-  // override in sub classes, default
-  // will call the currentStateRender
+  /**
+   * @description override in sub classes, defaults to calling the currentStateRender
+   * @param {!object} data
+   * @return {TemplateResult}
+   */
   render(data) {
     return this.currentStateRender(data);
   }
 
+  /**
+   * @param {!string} eventName
+   * @param {object=} detail
+   */
   send(eventName, detail = {}) {
     if (!eventName) {
       throw new Error('an event name is required to send!');
@@ -209,7 +240,12 @@ class SMElement extends HTMLElement {
     }
   }
 
-  // convenience for setting event listeners that send
+  /**
+   * @description convenience for setting event listeners that call send
+   * @param {!string} eventName
+   * @param {object=} detail
+   * @return {function(Event)}
+   */
   listenAndSend(eventName, detail) {
     return (event) => this.send(eventName, detail);
   }
@@ -241,20 +277,22 @@ class SMElement extends HTMLElement {
   initializeData_(properties) {
     // flatten properties and assign
     this.data = Object.keys(properties).reduce((acc, k) => {
-      // this happens AFTER props may have been set so use local prop if exists
-      // TODO: if value is a function, run it and use it's return value!
-      // ...
-      acc[k] = this[k] !== undefined ? this[k]: properties[k].value;
+      // this happens AFTER props MAY have been set, so use local prop if exists
+      const local = this[k];
+      const def = typeof properties[k].value === 'function' ? properties[k].value() : properties[k].value;
+      acc[k] = local !== undefined ? local : def;
       return acc;
     }, {});
   }
 
+  /** @param {!object} */
   initializeMachine_(initial) {
     this.transitionTo_(initial);
   }
 
+  /** @param {!object} properties */
   initializeProps_(properties) {
-    // create getter/setter pairs for properties
+    // create getter/setter pairs for each property
     const init = (key) => {
       Object.defineProperty(this, key, {
         get: function() {
@@ -272,14 +310,18 @@ class SMElement extends HTMLElement {
     }
   }
 
-  // request a render on the next animation frame
+  /** @description request a render on the next animation frame */
   requestRender__() {
-    cancelAnimationFrame(this.renderRequest__);
-    this.renderRequest__ = requestAnimationFrame(() => {
+    cancelAnimationFrame(this.__renderRequest);
+    this.__renderRequest = requestAnimationFrame(() => {
       if (this.root) {
         render(this.render(this.__data), this.root);
       }
     });
+  }
+  /** @description force a render immediately */
+  renderNow() {
+    render(this.render(this.__data), this.root);
   }
 
 }
