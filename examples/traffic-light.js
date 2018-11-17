@@ -27,10 +27,12 @@ const style = html `
   </style>
 `;
 
+/** @enum {string} */
 const eventNames = {
   CHANGE: 'change',
 };
 
+/** @enum {string} */
 const stateNames = {
   RED: 'red',
   YELLOW: 'yellow',
@@ -171,7 +173,7 @@ class TrafficLight extends SMElement {
         <div id="light" class="${color}"></div>
           <div>
             <!-- use the currentStateRender -->
-            ${this.currentStateRender()}
+            ${this.currentStateRender(this.data)}
           </div>
       </div>
     `;
@@ -180,3 +182,5 @@ class TrafficLight extends SMElement {
 };
 
 customElements.define('traffic-light', TrafficLight);
+
+export default TrafficLight;
