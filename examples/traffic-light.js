@@ -47,6 +47,7 @@ class TrafficLight extends SMElement {
       states: {
         green: {
           name: stateNames.GREEN,
+          /** @this {TrafficLight} */
           onEntry() {
             // wait greenDelay ms before sending the change event
             setTimeout(() => {
@@ -57,17 +58,20 @@ class TrafficLight extends SMElement {
             {
               event: eventNames.CHANGE,
               target: stateNames.YELLOW,
+              /** @this {TrafficLight} */
               effect(detail) {
                 return {color: 'yellow'};
               }
             }
           ],
+          /** @this {TrafficLight} */
           render() {
             return `don't walk`;
           }
         },
         yellow: {
           name: stateNames.YELLOW,
+          /** @this {TrafficLight} */
           onEntry() {
             setTimeout(() => {
               this.send(eventNames.CHANGE);
@@ -77,17 +81,20 @@ class TrafficLight extends SMElement {
             {
               event: eventNames.CHANGE,
               target: stateNames.RED,
+              /** @this {TrafficLight} */
               effect(detail) {
                 return {color: 'red', pedestrianCount: Math.round(Math.random() * 10)};
               },
             }
           ],
+          /** @this {TrafficLight} */
           render() {
             return `don't walk`;
           }
         },
         red: {
           name: stateNames.RED,
+          /** @this {TrafficLight} */
           onEntry() {
             this.color = 'red';
             this.pedestrianRemover = setInterval(() =>{
@@ -111,15 +118,18 @@ class TrafficLight extends SMElement {
             {
               event: eventNames.CHANGE,
               target: stateNames.GREEN,
+              /** @this {TrafficLight} */
               effect(detail) {
                 return {color: 'green'};
               },
+              /** @this {TrafficLight} */
               condition(detail) {
                 // only transition to green if there are no more pedestrians
                 return this.pedestrianCount === 0;
               },
             },
           ],
+          /** @this {TrafficLight} */
           render() {
             return html`
               walk

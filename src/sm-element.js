@@ -1,3 +1,4 @@
+// @ts-check
 import {html, TemplateResult, render} from 'lit-html/lit-html';
 
 /**
@@ -17,11 +18,12 @@ import {html, TemplateResult, render} from 'lit-html/lit-html';
  * @property {function():undefined=} onExit
  */
 
+// dummy class for type info
 class Machine {}
 /** @type {Object<string, State>} */
-Machine.prototype.states;
+Machine.prototype.states = {};
 /** @type {!string} */
-Machine.prototype.initial;
+Machine.prototype.initial = '';
 
 /**
  * @description serializes property to a valid attribute
@@ -33,7 +35,6 @@ function serializeAttribute(prop) {
     return (prop === true) ? '' : null;
   } else if (typeof prop === 'object') {
     throw new Error('cannot serialize object to attribute');
-    return null;
   } else if (prop === undefined) {
     return null;
   }
@@ -47,15 +48,16 @@ class SMElement extends HTMLElement {
 
   constructor() {
     super();
+    /** @type {object} */
     this.__data = {};
-    /** @type {State} */
-    this.currentState;
+    /** @type {?State} */
+    this.currentState = null;
     /** @type {string} */
-    this.__state;
+    this.__state = '';
     this.root;
     this.__renderRequest;
     /** @type {function(object):TemplateResult} */
-    this.currentStateRender;
+    this.currentStateRender = () => html``;
     /** @type {Object<string, State>} */
     // @ts-ignore
     this.states = this.constructor.machine.states;
@@ -68,7 +70,7 @@ class SMElement extends HTMLElement {
 
   /** @return {!Machine} */
   static get machine() {
-    // return a basic state machine
+    // return a basic, single-state machine
     return {
       initial:'initial',
       states: {
@@ -159,13 +161,14 @@ class SMElement extends HTMLElement {
 
   /**
    * @description creates a shadowRoot by default. override to use a different render target
+   * @protected
    */
   createRenderRoot() {
     this.root = this.attachShadow({mode:'open'});
   }
 
   /**
-   * @param {string} name
+   * @param {!string} name
    * @param {string} oldVal
    * @param {string} newVal
    */
@@ -186,9 +189,9 @@ class SMElement extends HTMLElement {
     } else {
       value = type(newVal);
     }
-    // only update property if it's changed to prevent infinite loop
+    // only update property if it's changed to prevent infinite loops
     // with reflected properties.
-    if (propName && value !== this[propName]) {
+    if (value !== oldVal && propName && value !== this[propName]) {
       this[propName] = value;
     }
   }
@@ -256,7 +259,10 @@ class SMElement extends HTMLElement {
             this.data = t.effect.call(this, detail);
           }
           // run the first passing transition
-          this.transitionTo_(this.getStateByName_(t.target));
+          const nextState = this.getStateByName_(t.target);
+          if (nextState) {
+            this.transitionTo_(nextState);
+          }
         }
         return passed;// break out of loop if true, before testing more conditions
       });
@@ -264,14 +270,15 @@ class SMElement extends HTMLElement {
       // only one transition, check for condition first
       const transition = transitions[0];
       const targetState = this.getStateByName_(transition.target);
-
-      // no condition, or condition returns true
-      if (!transition.condition || (transition.condition && transition.condition.call(this, detail))) {
-        if (transition.effect) {
-          // update data with return from effect
-          this.data = transition.effect.call(this, detail);
+      if (targetState) {
+        // no condition, or condition returns true
+        if (!transition.condition || (transition.condition && transition.condition.call(this, detail))) {
+          if (transition.effect) {
+            // update data with return from effect
+            this.data = transition.effect.call(this, detail);
+          }
+          this.transitionTo_(targetState);
         }
-        this.transitionTo_(targetState);
       }
     }
   }
@@ -280,23 +287,22 @@ class SMElement extends HTMLElement {
    * @description convenience for setting event listeners that call send
    * @param {!string} eventName
    * @param {object=} detail
-   * @return {function(Event)}
+   * @return {function()}
    */
   listenAndSend(eventName, detail) {
-    return (event) => this.send(eventName, detail);
+    return () => this.send(eventName, detail);
   }
   /** @param {!State} newState */
   transitionTo_(newState) {
     if (!newState) {
       throw new Error('transitionTo_ called with no State');
-      return;
     }
     // call onExit if exists
     if (this.currentState && this.currentState.onExit) {
       this.currentState.onExit.call(this);
     }
     this.currentState = newState;
-    this.currentStateRender = newState.render || function(data) {return html``};
+    this.currentStateRender = newState.render || function() {return html``};
     // udpate state property
     this.state = newState.name;
     // call onEntry if it exists
@@ -310,7 +316,9 @@ class SMElement extends HTMLElement {
    * @return {?State}
    */
   getStateByName_(name) {
-    return Object.values(this.states).find(s => s.name === name) || null;
+    // using Object.keys.map instead of Object.values, because not every browser
+    // supports Object.values
+    return Object.keys(this.states).map(k => this.states[k]).find(s => s.name === name) || null;
   }
 
   initializeData_(properties) {
@@ -332,12 +340,12 @@ class SMElement extends HTMLElement {
   /** @param {!object} properties */
   initializeProps_(properties) {
     // create getter/setter pairs for each property
-    const init = (key) => {
+    const init = key => {
       Object.defineProperty(this, key, {
-        get: function() {
+        get() {
           return this.data[key];
         },
-        set: function(newVal) {
+        set(newVal) {
           const update = {};
           update[key] = newVal;
           this.data = update;
@@ -351,7 +359,9 @@ class SMElement extends HTMLElement {
 
   /** @description request a render on the next animation frame */
   requestRender__() {
-    cancelAnimationFrame(this.__renderRequest);
+    if (this.__renderRequest) {
+      cancelAnimationFrame(this.__renderRequest);
+    }
     this.__renderRequest = requestAnimationFrame(() => {
       if (this.root) {
         render(this.render(this.__data), this.root);
@@ -360,7 +370,12 @@ class SMElement extends HTMLElement {
   }
   /** @description force a render immediately */
   renderNow() {
-    render(this.render(this.__data), this.root);
+    if (this.root) {
+      render(this.render(this.__data), this.root);
+    } else {
+      throw new Error('renderNow called before "this.root" is defined.');
+    }
+
   }
 
 };

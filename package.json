@@ -1,6 +1,6 @@
 {
   "name": "sm-element",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "state machine backed custom element base class, with lit-html rendering",
   "main": "sm-element.js",
   "module": "sm-element.js",
@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "./node_modules/rollup/bin/rollup -c",
-    "test": "npm run build && wct"
+    "test": "npm run build && wct",
+    "dev": "polymer serve -H 0.0.0.0"
   },
   "author": "jrobinsonmedia@gmail.com",
   "license": "ISC",
