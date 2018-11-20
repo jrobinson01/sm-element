@@ -1,46 +1,14 @@
-import SMElement from '../src/sm-element';
+import SMElement from '../../src/sm-element';
+import {Machine} from '../../src/sm-element';
 import {html} from 'lit-html/lit-html';
+import style from './style.js';
+import {eventNames, stateNames} from './const.js';
 
-const style = html `
-  <style>
-    div {
-      margin: 10px;
-      width: 100px;
-      text-align: center;
-    }
-    #light {
-      width: 100px;
-      height: 100px;
-      border: 4px solid black;
-      background-color: black;
-      border-radius: 50%;
-    }
-    #light.green {
-      background-color: green;
-    }
-    #light.red {
-      background-color: red;
-    }
-    #light.yellow {
-      background-color: yellow;
-    }
-  </style>
-`;
-
-/** @enum {string} */
-const eventNames = {
-  CHANGE: 'change',
-};
-
-/** @enum {string} */
-const stateNames = {
-  RED: 'red',
-  YELLOW: 'yellow',
-  GREEN: 'green',
-}
-
+/**
+ * @extends {SMElement}
+ */
 class TrafficLight extends SMElement {
-
+  /** @return {Machine} */
   static get machine() {
     return {
       initial: stateNames.RED,
@@ -49,7 +17,6 @@ class TrafficLight extends SMElement {
           name: stateNames.GREEN,
           /** @this {TrafficLight} */
           onEntry() {
-            // wait greenDelay ms before sending the change event
             setTimeout(() => {
               this.send(eventNames.CHANGE);
             }, this.greenDelay);
@@ -59,14 +26,14 @@ class TrafficLight extends SMElement {
               event: eventNames.CHANGE,
               target: stateNames.YELLOW,
               /** @this {TrafficLight} */
-              effect(detail) {
+              effect() {
                 return {color: 'yellow'};
               }
             }
           ],
           /** @this {TrafficLight} */
           render() {
-            return `don't walk`;
+            return html`don't walk`;
           }
         },
         yellow: {
@@ -81,15 +48,15 @@ class TrafficLight extends SMElement {
             {
               event: eventNames.CHANGE,
               target: stateNames.RED,
-              /** @this {TrafficLight} */
-              effect(detail) {
+              /** @this TrafficLight */
+              effect() {
                 return {color: 'red', pedestrianCount: Math.round(Math.random() * 10)};
               },
             }
           ],
           /** @this {TrafficLight} */
           render() {
-            return `don't walk`;
+            return html`don't walk`;
           }
         },
         red: {
@@ -97,7 +64,7 @@ class TrafficLight extends SMElement {
           /** @this {TrafficLight} */
           onEntry() {
             this.color = 'red';
-            this.pedestrianRemover = setInterval(() =>{
+            this.pedestrianRemover = setInterval(() => {
               if (this.pedestrianCount >= 1) {
                 // for simplicity, decrease pedestrian count here,
                 // but in the real world, this could be
@@ -119,11 +86,11 @@ class TrafficLight extends SMElement {
               event: eventNames.CHANGE,
               target: stateNames.GREEN,
               /** @this {TrafficLight} */
-              effect(detail) {
+              effect() {
                 return {color: 'green'};
               },
               /** @this {TrafficLight} */
-              condition(detail) {
+              condition() {
                 // only transition to green if there are no more pedestrians
                 return this.pedestrianCount === 0;
               },
@@ -138,7 +105,7 @@ class TrafficLight extends SMElement {
               </div>
               <div>
                 <button
-                  @click="${(event) => this.pedestrianCount += 1}"
+                  @click="${() => this.pedestrianCount += 1}"
                   .disabled="${this.pedestrianCount <= 0}">
                 add pedestrians
                 </button>
@@ -162,11 +129,11 @@ class TrafficLight extends SMElement {
         type: Number,
       },
       redDelay: {
-        value: 3000,
+        value: 2000,
         type: Number,
       },
       greenDelay: {
-        value: 4000,
+        value: 2000,
         type: Number
       },
       pedestrianCount: {
@@ -176,7 +143,7 @@ class TrafficLight extends SMElement {
     }
   }
   // the component's `data` property is passed to render
-  render({color, pedestrianCount}) {
+  render({color}) {
     return html`
       ${style}
       <div>

@@ -14,8 +14,8 @@ import {html, TemplateResult, render} from 'lit-html/lit-html';
  * @property {!string} name
  * @property {Array<Transition>} transitions
  * @property {function(object):TemplateResult=} render
- * @property {function():void=} onEntry
- * @property {function():void=} onExit
+ * @property {function(this:SMElement):void=} onEntry
+ * @property {function(this:SMElement):void=} onExit
  */
 
 // dummy class for type info
@@ -56,8 +56,8 @@ class SMElement extends HTMLElement {
     this.__state = '';
     this.root;
     this.__renderRequest;
-    /** @type {function(object):TemplateResult} */
-    this.currentStateRender = () => html``;
+    /** @type {undefined | function(object):TemplateResult} */
+    this.currentStateRender;
     /** @type {Object<string, State>} */
     // @ts-ignore
     this.states = this.constructor.machine.states;
@@ -326,6 +326,7 @@ class SMElement extends HTMLElement {
     return Object.keys(this.states).map(k => this.states[k]).find(s => s.name === name) || null;
   }
 
+  /** @param {!object} properties */
   initializeData_(properties) {
     // flatten properties and assign
     this.data = Object.keys(properties).reduce((acc, k) => {

@@ -177,4 +177,4 @@ If you want to fiddle around with THIS project, fork it, `npm install`, and then
 - `renderNow(data)` forces an immediate render
 
 ### Examples
-[traffic light](https://github.com/jrobinson01/sm-element/blob/master/examples/traffic-light.js)
+[traffic light](https://github.com/jrobinson01/sm-element/blob/master/examples/traffic-light/traffic-light.js)

@@ -6,8 +6,8 @@ import { html, render } from 'lit-html/lit-html';
  * @typedef {Object} Transition
  * @property {!string} event
  * @property {!string} target
- * @property {function(object):object} effect
- * @property {function(object):boolean} condition
+ * @property {function(object):object=} effect
+ * @property {function(object):boolean=} condition
  */
 
 /**
@@ -15,8 +15,8 @@ import { html, render } from 'lit-html/lit-html';
  * @property {!string} name
  * @property {Array<Transition>} transitions
  * @property {function(object):TemplateResult=} render
- * @property {function():undefined=} onEntry
- * @property {function():undefined=} onExit
+ * @property {function(this:SMElement):void=} onEntry
+ * @property {function(this:SMElement):void=} onExit
  */
 
 // dummy class for type info
@@ -57,8 +57,8 @@ class SMElement extends HTMLElement {
     this.__state = '';
     this.root;
     this.__renderRequest;
-    /** @type {function(object):TemplateResult} */
-    this.currentStateRender = () => html``;
+    /** @type {undefined | function(object):TemplateResult} */
+    this.currentStateRender;
     /** @type {Object<string, State>} */
     // @ts-ignore
     this.states = this.constructor.machine.states;
@@ -262,11 +262,9 @@ class SMElement extends HTMLElement {
               this.data = t.effect.call(this, detail);
             }
             // run the first passing transition
-            // TODO: rework this. the effect shouldn't be called above
-            // if nextState is undefined!
             this.transitionTo_(nextState);
           } else {
-            throw new Error(`no state found for target: ${t.target}`)
+            throw new Error(`no target state found for transition: ${t}`);
           }
         }
         return passed;// break out of loop if true, before testing more conditions
@@ -284,6 +282,8 @@ class SMElement extends HTMLElement {
           }
           this.transitionTo_(targetState);
         }
+      } else {
+        throw new Error(`no target state found for transition: ${transition}`);
       }
     }
   }
@@ -297,16 +297,18 @@ class SMElement extends HTMLElement {
   listenAndSend(eventName, detail) {
     return () => this.send(eventName, detail);
   }
+
   /** @param {!State} newState */
   transitionTo_(newState) {
     if (!newState) {
-      throw new Error('transitionTo_ called with no State');
+      throw new Error('transitionTo_ called without a State');
     }
     // call onExit if exists
     if (this.currentState && this.currentState.onExit) {
       this.currentState.onExit.call(this);
     }
     this.currentState = newState;
+    console.log('newState has render?', newState.render);
     this.currentStateRender = newState.render || function() {return html``};
     // udpate state property
     this.state = newState.name;
@@ -326,6 +328,7 @@ class SMElement extends HTMLElement {
     return Object.keys(this.states).map(k => this.states[k]).find(s => s.name === name) || null;
   }
 
+  /** @param {!object} properties */
   initializeData_(properties) {
     // flatten properties and assign
     this.data = Object.keys(properties).reduce((acc, k) => {
@@ -386,3 +389,4 @@ class SMElement extends HTMLElement {
 }
 
 export default SMElement;
+export { Machine };
