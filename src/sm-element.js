@@ -5,8 +5,8 @@ import {html, TemplateResult, render} from 'lit-html/lit-html';
  * @typedef {Object} Transition
  * @property {!string} event
  * @property {!string} target
- * @property {function(object):object} effect
- * @property {function(object):boolean} condition
+ * @property {function(object):object=} effect
+ * @property {function(object):boolean=} condition
  */
 
 /**
@@ -14,8 +14,8 @@ import {html, TemplateResult, render} from 'lit-html/lit-html';
  * @property {!string} name
  * @property {Array<Transition>} transitions
  * @property {function(object):TemplateResult=} render
- * @property {function():undefined=} onEntry
- * @property {function():undefined=} onExit
+ * @property {function():void=} onEntry
+ * @property {function():void=} onExit
  */
 
 // dummy class for type info
@@ -253,15 +253,17 @@ class SMElement extends HTMLElement {
       transitions.some(t => {
         const passed = t.condition.call(this, detail);
         if (passed) {
-          // before running the transition, run it's effect
-          if (t.effect) {
-            // update data with return from effect
-            this.data = t.effect.call(this, detail);
-          }
-          // run the first passing transition
           const nextState = this.getStateByName_(t.target);
+          // before running the transition, run it's effect
           if (nextState) {
+            if (t.effect) {
+              // update data with return from effect
+              this.data = t.effect.call(this, detail);
+            }
+            // run the first passing transition
             this.transitionTo_(nextState);
+          } else {
+            throw new Error(`no target state found for transition: ${t}`);
           }
         }
         return passed;// break out of loop if true, before testing more conditions
@@ -279,6 +281,8 @@ class SMElement extends HTMLElement {
           }
           this.transitionTo_(targetState);
         }
+      } else {
+        throw new Error(`no target state found for transition: ${transition}`);
       }
     }
   }
@@ -292,10 +296,11 @@ class SMElement extends HTMLElement {
   listenAndSend(eventName, detail) {
     return () => this.send(eventName, detail);
   }
+
   /** @param {!State} newState */
   transitionTo_(newState) {
     if (!newState) {
-      throw new Error('transitionTo_ called with no State');
+      throw new Error('transitionTo_ called without a State');
     }
     // call onExit if exists
     if (this.currentState && this.currentState.onExit) {
@@ -381,3 +386,4 @@ class SMElement extends HTMLElement {
 };
 
 export default SMElement;
+export {Machine};

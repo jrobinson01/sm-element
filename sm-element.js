@@ -254,15 +254,19 @@ class SMElement extends HTMLElement {
       transitions.some(t => {
         const passed = t.condition.call(this, detail);
         if (passed) {
-          // before running the transition, run it's effect
-          if (t.effect) {
-            // update data with return from effect
-            this.data = t.effect.call(this, detail);
-          }
-          // run the first passing transition
           const nextState = this.getStateByName_(t.target);
+          // before running the transition, run it's effect
           if (nextState) {
+            if (t.effect) {
+              // update data with return from effect
+              this.data = t.effect.call(this, detail);
+            }
+            // run the first passing transition
+            // TODO: rework this. the effect shouldn't be called above
+            // if nextState is undefined!
             this.transitionTo_(nextState);
+          } else {
+            throw new Error(`no state found for target: ${t.target}`)
           }
         }
         return passed;// break out of loop if true, before testing more conditions
