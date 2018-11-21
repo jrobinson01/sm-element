@@ -308,7 +308,6 @@ class SMElement extends HTMLElement {
       this.currentState.onExit.call(this);
     }
     this.currentState = newState;
-    console.log('newState has render?', newState.render);
     this.currentStateRender = newState.render || function() {return html``};
     // udpate state property
     this.state = newState.name;
