@@ -1,6 +1,4 @@
-import { html, render } from 'lit-html/lit-html';
-
-// @ts-check
+import {html, TemplateResult, render} from 'lit-html/lit-html';
 
 /**
  * @typedef {Object} Transition
@@ -22,9 +20,9 @@ import { html, render } from 'lit-html/lit-html';
 // dummy class for type info
 class Machine {}
 /** @type {Object<string, State>} */
-Machine.prototype.states = {};
+Machine.prototype.states;
 /** @type {!string} */
-Machine.prototype.initial = '';
+Machine.prototype.initial;
 
 /**
  * @description serializes property to a valid attribute
@@ -46,7 +44,6 @@ function serializeAttribute(prop) {
  * @extends {HTMLElement}
  */
 class SMElement extends HTMLElement {
-
   constructor() {
     super();
     /** @type {object} */
@@ -55,6 +52,7 @@ class SMElement extends HTMLElement {
     this.currentState = null;
     /** @type {string} */
     this.__state = '';
+    /** @type {Element|DocumentFragment} */
     this.root;
     this.__renderRequest;
     /** @type {undefined | function(object):TemplateResult} */
@@ -112,10 +110,12 @@ class SMElement extends HTMLElement {
     return this.__state;
   }
 
-  /** @param {string} state */
+  /** @param {!string} state */
   set state(state) {
     this.__state = state;
     this.setAttribute('state', this.__state);
+    // TODO: dispatch state-changed event!
+    // ...
   }
 
   /** @return {object} */
@@ -155,9 +155,9 @@ class SMElement extends HTMLElement {
     // initialze data
     // @ts-ignore
     this.initializeData_(this.constructor.properties);
-    // initialze the machine
+    // set initial state
     // @ts-ignore
-    this.initializeMachine_(this.getStateByName_(this.constructor.machine.initial));
+    this.transitionTo_(this.getStateByName_(this.constructor.machine.initial));
   }
 
   /**
@@ -339,11 +339,6 @@ class SMElement extends HTMLElement {
     }, {});
   }
 
-  /** @param {!State} initial */
-  initializeMachine_(initial) {
-    this.transitionTo_(initial);
-  }
-
   /** @param {!object} properties */
   initializeProps_(properties) {
     // create getter/setter pairs for each property
@@ -357,8 +352,8 @@ class SMElement extends HTMLElement {
           update[key] = newVal;
           this.data = update;
         }
-      });
-    };
+      })
+    }
     for(let key in properties) {
       init(key);
     }
@@ -371,21 +366,21 @@ class SMElement extends HTMLElement {
     }
     this.__renderRequest = requestAnimationFrame(() => {
       if (this.root) {
-        render(this.render(this.__data), this.root);
+        render(this.render(this.data), this.root);
       }
     });
   }
   /** @description force a render immediately */
   renderNow() {
     if (this.root) {
-      render(this.render(this.__data), this.root);
+      render(this.render(this.data), this.root);
     } else {
       throw new Error('renderNow called before "this.root" is defined.');
     }
 
   }
 
-}
+};
 
 export default SMElement;
-export { Machine };
+export {Machine, html};

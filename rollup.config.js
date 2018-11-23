@@ -1,9 +1,10 @@
 import resolve from 'rollup-plugin-node-resolve';
+import filesize from 'rollup-plugin-filesize';
 
 export default {
   input: 'src/sm-element.js',
   output: {
-    file: 'sm-element.js',
+    file: 'sm-element.bundled.js',
     format: 'esm',
   },
   external: [
@@ -20,5 +21,8 @@ export default {
         moduleDirectory:'node_modules',
       },
     }),
+    filesize({
+      showBrotliSize: true
+    })
   ]
 }

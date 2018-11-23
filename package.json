@@ -12,7 +12,8 @@
     "url": "https://github.com/jrobinson01/sm-element.git"
   },
   "scripts": {
-    "build": "./node_modules/rollup/bin/rollup -c",
+    "build": "cp ./src/sm-element.js ./build/sm-element.ts ; tsc --project ./build ; rm ./build/sm-element.ts ; cp ./src/sm-element.js ./sm-element.js ; cp ./build/sm-element.d.ts ./sm-element.d.ts ; rm ./build/sm-element.d.ts ",
+    "checksize": "./node_modules/rollup/bin/rollup -c ; rm sm-element.bundled.js",
     "test": "npm run build && wct",
     "dev": "polymer serve -H 0.0.0.0"
   },
@@ -26,6 +27,7 @@
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "rollup": "^0.67.1",
+    "rollup-plugin-filesize": "^5.0.1",
     "rollup-plugin-node-resolve": "^3.4.0",
     "wct-browser-legacy": "^1.0.2",
     "web-component-tester": "^6.9.0"
