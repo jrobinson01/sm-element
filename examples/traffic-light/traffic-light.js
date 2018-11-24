@@ -1,14 +1,14 @@
-import SMElement from '../../src/sm-element';
-import {Machine} from '../../src/sm-element';
-import {html} from 'lit-html/lit-html';
+import SMElement, {Machine, html} from '../../src/sm-element';
 import style from './style.js';
+
 import {eventNames, stateNames} from './const.js';
 
 /**
  * @extends {SMElement}
  */
 class TrafficLight extends SMElement {
-  /** @return {Machine} */
+
+  /** @return {!Machine} */
   static get machine() {
     return {
       initial: stateNames.RED,

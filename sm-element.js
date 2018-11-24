@@ -1,23 +1,28 @@
 import {html, TemplateResult, render} from 'lit-html/lit-html';
 
-/**
- * @typedef {Object} Transition
- * @property {!string} event
- * @property {!string} target
- * @property {function(object):object=} effect
- * @property {function(object):boolean=} condition
- */
+// dummy classes for type info
+class Transition {}
+/** @type {!string} */
+Transition.prototype.event;
+/** @type {!string} */
+Transition.prototype.target;
+/** @type {?function(Object.<string, object>):object} */
+Transition.prototype.effect;
+/** @type {?function(Object.<string, object>):boolean} */
+Transition.prototype.condition;
 
-/**
- * @typedef {Object} State
- * @property {!string} name
- * @property {Array<Transition>} transitions
- * @property {function(object):TemplateResult=} render
- * @property {function(this:SMElement):void=} onEntry
- * @property {function(this:SMElement):void=} onExit
- */
+class State {}
+/** @type {!string} */
+State.prototype.name;
+/** @type {!Array<Transition>} */
+State.prototype.transitions;
+/** @type {?function(Object.<string, object>):TemplateResult} */
+State.prototype.render;
+/** @type {?function(this:SMElement):void} */
+State.prototype.onEntry;
+/** @type {?function(this:SMElement):void} */
+State.prototype.onExit;
 
-// dummy class for type info
 class Machine {}
 /** @type {Object<string, State>} */
 Machine.prototype.states;
@@ -383,4 +388,4 @@ class SMElement extends HTMLElement {
 };
 
 export default SMElement;
-export {Machine, html};
+export {Machine, State, Transition, html};

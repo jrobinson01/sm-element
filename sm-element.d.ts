@@ -1,19 +1,8 @@
 import { html } from 'lit-html/lit-html';
-/**
- * @typedef {Object} Transition
- * @property {!string} event
- * @property {!string} target
- * @property {function(object):object=} effect
- * @property {function(object):boolean=} condition
- */
-/**
- * @typedef {Object} State
- * @property {!string} name
- * @property {Array<Transition>} transitions
- * @property {function(object):TemplateResult=} render
- * @property {function(this:SMElement):void=} onEntry
- * @property {function(this:SMElement):void=} onExit
- */
+declare class Transition {
+}
+declare class State {
+}
 declare class Machine {
 }
 /**
@@ -99,4 +88,4 @@ declare class SMElement extends HTMLElement {
     renderNow(): void;
 }
 export default SMElement;
-export { Machine, html };
+export { Machine, State, Transition, html };
