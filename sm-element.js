@@ -6,9 +6,9 @@ class Transition {}
 Transition.prototype.event;
 /** @type {!string} */
 Transition.prototype.target;
-/** @type {?function(Object.<string, object>):object} */
+/** @type {function(Object.<string, object>):object=} */
 Transition.prototype.effect;
-/** @type {?function(Object.<string, object>):boolean} */
+/** @type {function(Object.<string, object>):boolean=} */
 Transition.prototype.condition;
 
 class State {}
@@ -16,11 +16,11 @@ class State {}
 State.prototype.name;
 /** @type {!Array<Transition>} */
 State.prototype.transitions;
-/** @type {?function(Object.<string, object>):TemplateResult} */
+/** @type {function(Object.<string, object>):TemplateResult=} */
 State.prototype.render;
-/** @type {?function(this:SMElement):void} */
+/** @type {function(this:SMElement):void=} */
 State.prototype.onEntry;
-/** @type {?function(this:SMElement):void} */
+/** @type {function(this:SMElement):void=} */
 State.prototype.onExit;
 
 class Machine {}
