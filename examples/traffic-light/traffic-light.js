@@ -1,21 +1,17 @@
-import SMElement, {Machine, html} from '../../src/sm-element';
+import SMElement, {html} from '../../sm-element';
 import style from './style.js';
 
 import {eventNames, stateNames} from './const.js';
 
-/**
- * @extends {SMElement}
- */
+
 class TrafficLight extends SMElement {
 
-  /** @return {!Machine} */
   static get machine() {
     return {
       initial: stateNames.RED,
       states: {
         green: {
           name: stateNames.GREEN,
-          /** @this {TrafficLight} */
           onEntry() {
             setTimeout(() => {
               this.send(eventNames.CHANGE);
@@ -25,20 +21,17 @@ class TrafficLight extends SMElement {
             {
               event: eventNames.CHANGE,
               target: stateNames.YELLOW,
-              /** @this {TrafficLight} */
               effect() {
                 return {color: 'yellow'};
               }
             }
           ],
-          /** @this {TrafficLight} */
           render() {
             return html`don't walk`;
           }
         },
         yellow: {
           name: stateNames.YELLOW,
-          /** @this {TrafficLight} */
           onEntry() {
             setTimeout(() => {
               this.send(eventNames.CHANGE);
@@ -48,20 +41,17 @@ class TrafficLight extends SMElement {
             {
               event: eventNames.CHANGE,
               target: stateNames.RED,
-              /** @this TrafficLight */
               effect() {
                 return {color: 'red', pedestrianCount: Math.round(Math.random() * 10)};
               },
             }
           ],
-          /** @this {TrafficLight} */
           render() {
             return html`don't walk`;
           }
         },
         red: {
           name: stateNames.RED,
-          /** @this {TrafficLight} */
           onEntry() {
             this.color = 'red';
             this.pedestrianRemover = setInterval(() => {
@@ -85,18 +75,15 @@ class TrafficLight extends SMElement {
             {
               event: eventNames.CHANGE,
               target: stateNames.GREEN,
-              /** @this {TrafficLight} */
               effect() {
                 return {color: 'green'};
               },
-              /** @this {TrafficLight} */
               condition() {
                 // only transition to green if there are no more pedestrians
                 return this.pedestrianCount === 0;
               },
             },
           ],
-          /** @this {TrafficLight} */
           render() {
             return html`
               walk

@@ -1,4 +1,4 @@
-import SMElement from '../sm-element.js';
+import SMElement from '../../sm-element.js';
 import {html} from 'lit-html/lit-html';
 
 export default class BasicElement extends SMElement {

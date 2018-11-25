@@ -1,33 +1,20 @@
-import { html } from 'lit-html/lit-html';
-declare class Transition {
-}
-declare class State {
-}
-declare class Machine {
-}
+import { html, TemplateResult } from 'lit-html/lit-html';
 /**
  * @extends {HTMLElement}
  */
 declare class SMElement extends HTMLElement {
     constructor();
     /** @return {!Machine} */
-    static readonly machine: {
-        initial: string;
-        states: {
-            initial: {
-                name: string;
-                transitions: any[];
-            };
-        };
-    };
+    static readonly machine: {};
     /** @return {object} */
     static readonly properties: {};
+    /** @return {Array<string>} */
     static readonly observedAttributes: any[];
     /** @return {string} */
     /** @param {!string} state */
     state: any;
-    /** @return {object} */
-    /** @param {object} newData */
+    /** @return {Object<string, any>} */
+    /** @param {Object<string, any>} newData */
     data: any;
     connectedCallback(): void;
     /**
@@ -54,11 +41,18 @@ declare class SMElement extends HTMLElement {
      */
     oneOfState(current: any, ...states: any[]): boolean;
     /**
+     * @description reflects the render(data) function of the current state.
+     * @param {Object<string, any>} data
+     * @return {TemplateResult}
+     * @private
+     */
+    currentStateRender(data: any): TemplateResult;
+    /**
      * @description override in sub classes, defaults to calling the currentStateRender
      * @param {!object} data
      * @return {TemplateResult}
      */
-    render(data: any): any;
+    render(data: any): TemplateResult;
     /**
      * @param {!string} eventName
      * @param {object=} detail
@@ -71,21 +65,36 @@ declare class SMElement extends HTMLElement {
      * @return {function()}
      */
     listenAndSend(eventName: any, detail: any): () => void;
-    /** @param {!State} newState */
+    /**
+     * @param {!State} newState
+     * @private
+    */
     transitionTo_(newState: any): void;
     /**
      * @param {!string} name
      * @return {?State}
+     * @private
      */
     getStateByName_(name: any): any;
-    /** @param {!object} properties */
+    /**
+     * @param {!object} properties
+     * @private
+     */
     initializeData_(properties: any): void;
-    /** @param {!object} properties */
+    /**
+     * @param {!object} properties
+     * @private
+     */
     initializeProps_(properties: any): void;
-    /** @description request a render on the next animation frame */
-    requestRender__(): void;
-    /** @description force a render immediately */
+    /**
+     * @description request a render on the next animation frame
+     * @protected
+     */
+    requestRender_(): void;
+    /**
+     * @description force an immediate render
+     */
     renderNow(): void;
 }
 export default SMElement;
-export { Machine, State, Transition, html };
+export { html };

@@ -1,33 +1,28 @@
 import {html, TemplateResult, render} from 'lit-html/lit-html';
 
-// dummy classes for type info
-class Transition {}
-/** @type {!string} */
-Transition.prototype.event;
-/** @type {!string} */
-Transition.prototype.target;
-/** @type {function(Object.<string, object>):object=} */
-Transition.prototype.effect;
-/** @type {function(Object.<string, object>):boolean=} */
-Transition.prototype.condition;
 
-class State {}
-/** @type {!string} */
-State.prototype.name;
-/** @type {!Array<Transition>} */
-State.prototype.transitions;
-/** @type {function(Object.<string, object>):TemplateResult=} */
-State.prototype.render;
-/** @type {function(this:SMElement):void=} */
-State.prototype.onEntry;
-/** @type {function(this:SMElement):void=} */
-State.prototype.onExit;
+/**
+ * @typedef {Object} Transition
+ * @property {string} event
+ * @property {string} target
+ * @property {function(Object<string, any>):Object<string, any>=} effect
+ * @property {function(Object<string, any>):boolean=} condition
+ */
 
-class Machine {}
-/** @type {Object<string, State>} */
-Machine.prototype.states;
-/** @type {!string} */
-Machine.prototype.initial;
+/**
+ * @typedef {Object} State
+ * @property {string} name
+ * @property {!Array<Transition>} transitions
+ * @property {function(Object<string, any>):TemplateResult=} render
+ * @property {function()=} onEntry
+ * @property {function()=} onExit
+ */
+
+/**
+ * @typedef {Object} Machine
+ * @property {string} initial
+ * @property {!Object<string, State>} states
+ */
 
 /**
  * @description serializes property to a valid attribute
@@ -51,7 +46,7 @@ function serializeAttribute(prop) {
 class SMElement extends HTMLElement {
   constructor() {
     super();
-    /** @type {object} */
+    /** @type {Object<string, any>} */
     this.__data = {};
     /** @type {?State} */
     this.currentState = null;
@@ -59,9 +54,8 @@ class SMElement extends HTMLElement {
     this.__state = '';
     /** @type {Element|DocumentFragment} */
     this.root;
+    /** @type {number} */
     this.__renderRequest;
-    /** @type {undefined | function(object):TemplateResult} */
-    this.currentStateRender;
     /** @type {Object<string, State>} */
     // @ts-ignore
     this.states = this.constructor.machine.states;
@@ -74,16 +68,9 @@ class SMElement extends HTMLElement {
 
   /** @return {!Machine} */
   static get machine() {
-    // return a basic, single-state machine
-    return {
-      initial:'initial',
-      states: {
-        initial: {
-          name: 'initial',
-          transitions: []
-        }
-      }
-    };
+    // return a basic, single-state machine by default
+    // @ts-ignore
+    return {};
   }
 
   /** @return {object} */
@@ -91,21 +78,20 @@ class SMElement extends HTMLElement {
     // returns the data structure (a lot like polymer/lit-element properties)
     return {};
   }
-
+  /** @return {Array<string>} */
   static get observedAttributes() {
-    // for now, every property is observed
-    // should only attributes that are reflected be observed?
-    // ...
     const attributes = [];
     if (!this.__propNamesAndAttributeNames) {
       this.__propNamesAndAttributeNames = new Map();
     }
     for(let key in this.properties) {
-      // if (this.properties[key].reflect) { // should only attributes that are reflected, be observed?
+      // every String, Number or Boolean property is observed
+      const type = this.properties[key].type;
+      if (type === String || type === Number || type === Boolean) {
         const aName = key.toLowerCase();
         this.__propNamesAndAttributeNames.set(aName, key);
         attributes.push(aName);
-      // }
+      }
     }
     return attributes;
   }
@@ -119,16 +105,20 @@ class SMElement extends HTMLElement {
   set state(state) {
     this.__state = state;
     this.setAttribute('state', this.__state);
-    // TODO: dispatch state-changed event!
-    // ...
+    // dispatch state-changed event
+    this.dispatchEvent(new CustomEvent('state-changed', {
+      detail: {
+        state: this.state
+      }
+    }));
   }
 
-  /** @return {object} */
+  /** @return {Object<string, any>} */
   get data() {
     return this.__data;
   }
 
-  /** @param {object} newData */
+  /** @param {Object<string, any>} newData */
   set data(newData) {
     // reflect any attributes that need to be reflected (reflect === true)
     // and dispatch any events (notify === true)
@@ -153,7 +143,7 @@ class SMElement extends HTMLElement {
         }));
       }
     }
-    this.requestRender__();
+    this.requestRender_();
   }
 
   connectedCallback() {
@@ -218,6 +208,16 @@ class SMElement extends HTMLElement {
    */
   oneOfState(current, ...states) {
     return Boolean(states && states.includes(current));
+  }
+
+  /**
+   * @description reflects the render(data) function of the current state.
+   * @param {Object<string, any>} data
+   * @return {TemplateResult}
+   * @private
+   */
+  currentStateRender(data) {
+    return html``;
   }
 
   /**
@@ -303,7 +303,10 @@ class SMElement extends HTMLElement {
     return () => this.send(eventName, detail);
   }
 
-  /** @param {!State} newState */
+  /**
+   * @param {!State} newState
+   * @private
+  */
   transitionTo_(newState) {
     if (!newState) {
       throw new Error('transitionTo_ called without a State');
@@ -320,11 +323,12 @@ class SMElement extends HTMLElement {
     if (newState.onEntry) {
       newState.onEntry.call(this);
     }
-    this.requestRender__();
+    this.requestRender_();
   }
   /**
    * @param {!string} name
    * @return {?State}
+   * @private
    */
   getStateByName_(name) {
     // using Object.keys.map instead of Object.values, because not every browser
@@ -332,7 +336,10 @@ class SMElement extends HTMLElement {
     return Object.keys(this.states).map(k => this.states[k]).find(s => s.name === name) || null;
   }
 
-  /** @param {!object} properties */
+  /**
+   * @param {!object} properties
+   * @private
+   */
   initializeData_(properties) {
     // flatten properties and assign
     this.data = Object.keys(properties).reduce((acc, k) => {
@@ -344,10 +351,13 @@ class SMElement extends HTMLElement {
     }, {});
   }
 
-  /** @param {!object} properties */
+  /**
+   * @param {!object} properties
+   * @private
+   */
   initializeProps_(properties) {
     // create getter/setter pairs for each property
-    const init = key => {
+    const init = (/** @type {string}*/ key) => {
       Object.defineProperty(this, key, {
         get() {
           return this.data[key];
@@ -364,18 +374,26 @@ class SMElement extends HTMLElement {
     }
   }
 
-  /** @description request a render on the next animation frame */
-  requestRender__() {
+  /**
+   * @description request a render on the next animation frame
+   * @protected
+   */
+  requestRender_() {
     if (this.__renderRequest) {
       cancelAnimationFrame(this.__renderRequest);
     }
     this.__renderRequest = requestAnimationFrame(() => {
       if (this.root) {
         render(this.render(this.data), this.root);
+      } else {
+        throw new Error('attempted to render while "this.root" is undefined');
       }
     });
   }
-  /** @description force a render immediately */
+
+  /**
+   * @description force an immediate render
+   */
   renderNow() {
     if (this.root) {
       render(this.render(this.data), this.root);
@@ -388,4 +406,4 @@ class SMElement extends HTMLElement {
 };
 
 export default SMElement;
-export {Machine, State, Transition, html};
+export {html};
