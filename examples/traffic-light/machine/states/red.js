@@ -26,9 +26,6 @@ export default {
     {
       event: eventNames.CHANGE,
       target: stateNames.GREEN,
-      effect() {
-        return {color: 'green'};
-      },
       condition() {
         // only transition to green if there are no more pedestrians
         return this.pedestrianCount === 0;

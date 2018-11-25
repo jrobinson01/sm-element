@@ -4,6 +4,7 @@ import {html} from '../../../../sm-element';
 export default {
   name: stateNames.YELLOW,
   onEntry() {
+    this.color = 'yellow';
     setTimeout(() => {
       this.send(eventNames.CHANGE);
     }, this.yellowDelay);
@@ -13,7 +14,7 @@ export default {
       event: eventNames.CHANGE,
       target: stateNames.RED,
       effect() {
-        return {color: 'red', pedestrianCount: Math.round(Math.random() * 10)};
+        return {pedestrianCount: Math.round(Math.random() * 10)};
       },
     }
   ],

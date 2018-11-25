@@ -1,9 +1,10 @@
 import {stateNames, eventNames} from '../const.js';
 import {html} from '../../../../sm-element';
 
-export default  {
+export default {
   name: stateNames.GREEN,
   onEntry() {
+    this.color = 'green';
     setTimeout(() => {
       this.send(eventNames.CHANGE);
     }, this.greenDelay);
@@ -12,9 +13,6 @@ export default  {
     {
       event: eventNames.CHANGE,
       target: stateNames.YELLOW,
-      effect() {
-        return {color: 'yellow'};
-      }
     }
   ],
   render() {

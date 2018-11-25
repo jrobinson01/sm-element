@@ -33,7 +33,8 @@ class TrafficLight extends SMElement {
       }
     }
   }
-  // the component's `data` property is passed to render
+
+  // the component's `data` is passed to render
   render({color}) {
     return html`
       ${style}
