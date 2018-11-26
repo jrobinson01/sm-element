@@ -1,3 +1,4 @@
+// @ts-nocheck
 import BasicElement from './basic-element.js';
 import {html} from 'lit-html/lit-html';
 
@@ -110,14 +111,6 @@ describe('SMElement', () => {
         done();
       });
     });
-
-    it('should render immediately if renderNow is called', () => {
-      el.render = function(data) {
-        return html`immediate`;
-      }
-      el.renderNow();
-      expect(el.shadowRoot.textContent).to.equal('immediate');
-    })
   });
 
   describe('state management', () => {
