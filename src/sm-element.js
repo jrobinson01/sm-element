@@ -214,7 +214,6 @@ class SMElement extends HTMLElement {
    * @description reflects the render(data) function of the current state.
    * @param {Object<string, any>} data
    * @return {TemplateResult}
-   * @private
    */
   currentStateRender(data) {
     return html``;
@@ -389,18 +388,6 @@ class SMElement extends HTMLElement {
         throw new Error('attempted to render while "this.root" is undefined');
       }
     });
-  }
-
-  /**
-   * @description force an immediate render
-   */
-  renderNow() {
-    if (this.root) {
-      render(this.render(this.data), this.root);
-    } else {
-      throw new Error('renderNow called before "this.root" is defined.');
-    }
-
   }
 
 };
