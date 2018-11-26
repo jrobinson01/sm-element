@@ -44,7 +44,6 @@ declare class SMElement extends HTMLElement {
      * @description reflects the render(data) function of the current state.
      * @param {Object<string, any>} data
      * @return {TemplateResult}
-     * @private
      */
     currentStateRender(data: any): TemplateResult;
     /**
@@ -91,10 +90,6 @@ declare class SMElement extends HTMLElement {
      * @protected
      */
     requestRender_(): void;
-    /**
-     * @description force an immediate render
-     */
-    renderNow(): void;
 }
 export default SMElement;
 export { html };
