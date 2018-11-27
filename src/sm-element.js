@@ -14,8 +14,8 @@ import {html, TemplateResult, render} from 'lit-html/lit-html';
  * @property {string} name
  * @property {!Array<Transition>} transitions
  * @property {function(Object<string, any>):TemplateResult=} render
- * @property {function()=} onEntry
- * @property {function()=} onExit
+ * @property {function():void=} onEntry
+ * @property {function():void=} onExit
  */
 
 /**
