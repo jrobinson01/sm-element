@@ -1,13 +1,13 @@
 import {html, TemplateResult, render} from 'lit-html/lit-html';
 
-interface Transition {
+export interface Transition {
   event: string;
   target: string;
   effect?(detail: object):object;
   condition?(detail: object):boolean;
 }
 
-interface State {
+export interface State {
   name: string;
   transitions: Array<Transition>;
   render?(data: object): TemplateResult;
@@ -15,7 +15,7 @@ interface State {
   onExit?(): void;
 }
 
-interface Machine {
+export interface Machine {
   initial: string;
   states: { [key: string]: State; };
 }
@@ -131,7 +131,7 @@ class SMElement extends HTMLElement {
         }));
       }
     }
-    this.requestRender_();
+    this.requestRender();
   }
 
   protected connectedCallback() {
@@ -282,7 +282,7 @@ class SMElement extends HTMLElement {
     if (newState.onEntry) {
       newState.onEntry.call(this);
     }
-    this.requestRender_();
+    this.requestRender();
   }
 
   private getStateByName_(name: string): (State|null) {
@@ -325,7 +325,7 @@ class SMElement extends HTMLElement {
   /**
    * @description request a render on the next animation frame
    */
-  protected requestRender_() {
+  protected requestRender() {
     if (this.__renderRequest) {
       cancelAnimationFrame(this.__renderRequest);
     }
@@ -341,4 +341,4 @@ class SMElement extends HTMLElement {
 };
 
 export default SMElement;
-export {html, Machine, State, Transition};
+export {html};

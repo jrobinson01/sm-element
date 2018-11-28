@@ -1,6 +1,6 @@
 # SMElement
 
-SMElement is an *experimental* base class for writing web components backed by a state machine.
+SMElement is a base class for writing web components backed by state machines.
 
 # State machines
 
@@ -169,13 +169,13 @@ If you want to fiddle around with THIS project, fork it, `npm install`, and then
 
 ## API
 
-- `render(data)` called with the current `data`, returns a lit-html `TemplateResult`
-- `isState(currentState, desiredState)` returns true if `currentState` matches `desiredState`
-- `oneOfState(currentState, ...desiredStates)` returns true if the `currentState` matches one of the `desiredStates`
-- `send(eventName, detailObject)` send an event to the machine with an optional `detail` object
+- `render(data)` called with the current `data`, returns a lit-html `TemplateResult`.
+- `isState(currentState, desiredState)` returns true if `currentState` matches `desiredState`.
+- `oneOfState(currentState, ...desiredStates)` returns true if the `currentState` matches one of the `desiredStates`.
+- `send(eventName, detailObject)` send an event to the machine with an optional `detail` object.
 - `currentStateRender(data)` a reference to the current state's `render` function. This can be used to render specific UI for the current state.
-- `createRenderRoot()` override to set a customer render target. Defaults to creating a shadowRoot
-
+- `createRenderRoot()` override to set a customer render target. Defaults to creating a shadowRoot.
+- `requestRender()` rendering is asynchronous. Override to define a different rendering schedule.
 ### Examples
 - [traffic light](https://github.com/jrobinson01/sm-element/blob/master/examples/traffic-light/traffic-light.js)
 
