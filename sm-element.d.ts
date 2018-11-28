@@ -1,95 +1,84 @@
 import { html, TemplateResult } from 'lit-html/lit-html';
-/**
- * @extends {HTMLElement}
- */
+interface Transition {
+    event: string;
+    target: string;
+    effect?(detail: object): object;
+    condition?(detail: object): boolean;
+}
+interface State {
+    name: string;
+    transitions: Array<Transition>;
+    render?(data: object): TemplateResult;
+    onEntry?(): void;
+    onExit?(): void;
+}
+interface Machine {
+    initial: string;
+    states: {
+        [key: string]: State;
+    };
+}
 declare class SMElement extends HTMLElement {
+    private __data;
+    private __state;
+    private __renderRequest;
+    currentState: State;
+    root: Element | DocumentFragment;
+    states: {
+        [key: string]: State;
+    };
+    private static __propNamesAndAttributeNames;
     constructor();
-    /** @return {!Machine} */
-    static readonly machine: {};
-    /** @return {object} */
-    static readonly properties: {};
-    /** @return {Array<string>} */
-    static readonly observedAttributes: any[];
-    /** @return {string} */
-    /** @param {!string} state */
-    state: any;
-    /** @return {Object<string, any>} */
-    /** @param {Object<string, any>} newData */
-    data: any;
-    connectedCallback(): void;
+    static readonly machine: Machine;
+    static readonly properties: {
+        [key: string]: any;
+    };
+    static readonly observedAttributes: Array<string>;
+    state: string;
+    data: {
+        [s: string]: any;
+    };
+    protected connectedCallback(): void;
+    protected createRenderRoot(): void;
+    protected attributeChangedCallback(name: string, oldVal: string, newVal: string | undefined): void;
+    isState(current: State, desired: State): boolean;
     /**
-     * @description creates a shadowRoot by default. override to use a different render target
-     * @protected
+     * @description return true if the current state is one of the supplied states
      */
-    createRenderRoot(): void;
-    /**
-     * @param {!string} name
-     * @param {string} oldVal
-     * @param {string} newVal
-     */
-    attributeChangedCallback(name: any, oldVal: any, newVal: any): void;
-    /**
-     * @param {!State} current
-     * @param {!State} desired
-     * @return {boolean}
-     */
-    isState(current: any, desired: any): boolean;
-    /**
-     * @param {!State} current
-     * @param {...State} states
-     * @return {boolean}
-     */
-    oneOfState(current: any, ...states: any[]): boolean;
+    oneOfState(current: State, ...states: Array<State>): boolean;
     /**
      * @description reflects the render(data) function of the current state.
-     * @param {Object<string, any>} data
-     * @return {TemplateResult}
      */
-    currentStateRender(data: any): TemplateResult;
+    currentStateRender(_data: {
+        [key: string]: any;
+    }): TemplateResult;
     /**
      * @description override in sub classes, defaults to calling the currentStateRender
-     * @param {!object} data
-     * @return {TemplateResult}
      */
-    render(data: any): TemplateResult;
+    render(data: {
+        [key: string]: any;
+    }): TemplateResult;
     /**
      * @param {!string} eventName
      * @param {object=} detail
      */
-    send(eventName: any, detail?: {}): void;
+    send(eventName: string, detail?: {
+        [key: string]: any;
+    }): void;
     /**
      * @description convenience for setting event listeners that call send
-     * @param {!string} eventName
-     * @param {object=} detail
-     * @return {function()}
      */
-    listenAndSend(eventName: any, detail: any): () => void;
-    /**
-     * @param {!State} newState
-     * @private
-    */
-    transitionTo_(newState: any): void;
-    /**
-     * @param {!string} name
-     * @return {?State}
-     * @private
-     */
-    getStateByName_(name: any): any;
-    /**
-     * @param {!object} properties
-     * @private
-     */
-    initializeData_(properties: any): void;
-    /**
-     * @param {!object} properties
-     * @private
-     */
-    initializeProps_(properties: any): void;
+    listenAndSend(eventName: string, detail?: {
+        [key: string]: any;
+    }): () => void;
+    private transitionTo_;
+    private getStateByName_;
+    private initializeData_;
+    private initializeProps_;
     /**
      * @description request a render on the next animation frame
-     * @protected
      */
-    requestRender_(): void;
+    protected requestRender_(): void;
 }
 export default SMElement;
-export { html };
+export { html, Machine, State, Transition };
