@@ -1,85 +1,78 @@
 import {html, TemplateResult, render} from 'lit-html/lit-html';
 
+interface Transition {
+  event: string;
+  target: string;
+  effect?(detail: object):object;
+  condition?(detail: object):boolean;
+}
 
-/**
- * @typedef {Object} Transition
- * @property {string} event
- * @property {string} target
- * @property {function(Object<string, any>):Object<string, any>=} effect
- * @property {function(Object<string, any>):boolean=} condition
- */
+interface State {
+  name: string;
+  transitions: Array<Transition>;
+  render?(data: object): TemplateResult;
+  onEntry?(): void;
+  onExit?(): void;
+}
 
-/**
- * @typedef {Object} State
- * @property {string} name
- * @property {!Array<Transition>} transitions
- * @property {function(Object<string, any>):TemplateResult=} render
- * @property {function():void=} onEntry
- * @property {function():void=} onExit
- */
-
-/**
- * @typedef {Object} Machine
- * @property {string} initial
- * @property {!Object<string, State>} states
- */
+interface Machine {
+  initial: string;
+  states: { [key: string]: State; };
+}
 
 /**
  * @description serializes property to a valid attribute
- * @param {string|boolean} prop
- * @return {?string}
  */
-function serializeAttribute(prop) {
-  if (typeof prop === 'boolean') {
+function serializeAttribute(prop:string|boolean):string|null {
+  if (typeof prop === 'boolean' || prop === undefined) {
     return (prop === true) ? '' : null;
   } else if (typeof prop === 'object') {
     throw new Error('cannot serialize object to attribute');
-  } else if (prop === undefined) {
-    return null;
   }
   return String(prop);
 }
 
-/**
- * @extends {HTMLElement}
- */
+
 class SMElement extends HTMLElement {
+
+  private __data: { [key: string]: any; };
+  private __state: string;
+  private __renderRequest: number;
+  public currentState: State;
+  public root: Element|DocumentFragment;
+  public states: { [key: string]: State};
+  private static __propNamesAndAttributeNames: Map<string, string>;
+
   constructor() {
     super();
-    /** @type {Object<string, any>} */
     this.__data = {};
-    /** @type {?State} */
     this.currentState = null;
-    /** @type {string} */
     this.__state = '';
-    /** @type {Element|DocumentFragment} */
-    this.root;
-    /** @type {number} */
-    this.__renderRequest;
-    /** @type {Object<string, State>} */
-    // @ts-ignore
-    this.states = this.constructor.machine.states;
+    this.states = Object.getPrototypeOf(this).constructor.machine.states;
     // setup render target
     this.createRenderRoot();
     // setup property getter/setters
-    // @ts-ignore
-    this.initializeProps_(this.constructor.properties);
+    this.initializeProps_(Object.getPrototypeOf(this).constructor.properties);
   }
 
-  /** @return {!Machine} */
-  static get machine() {
+  static get machine(): Machine {
     // return a basic, single-state machine by default
-    // @ts-ignore
+    return {
+      initial:'initial',
+      states: {
+        initial: {
+          name: 'initial',
+          transitions: []
+        }
+      }
+    };
+  }
+
+  static get properties(): {[key: string]: any} {
     return {};
   }
 
-  /** @return {object} */
-  static get properties() {
-    // returns the data structure (a lot like polymer/lit-element properties)
-    return {};
-  }
-  /** @return {Array<string>} */
-  static get observedAttributes() {
+  static get observedAttributes(): Array<string> {
     const attributes = [];
     if (!this.__propNamesAndAttributeNames) {
       this.__propNamesAndAttributeNames = new Map();
@@ -96,13 +89,11 @@ class SMElement extends HTMLElement {
     return attributes;
   }
 
-  /** @return {string} */
-  get state() {
+  get state(): string {
     return this.__state;
   }
 
-  /** @param {!string} state */
-  set state(state) {
+  set state(state: string) {
     this.__state = state;
     this.setAttribute('state', this.__state);
     // dispatch state-changed event
@@ -113,20 +104,17 @@ class SMElement extends HTMLElement {
     }));
   }
 
-  /** @return {Object<string, any>} */
-  get data() {
+  get data(): { [s: string]: any; } {
     return this.__data;
   }
 
-  /** @param {Object<string, any>} newData */
-  set data(newData) {
+  set data(newData: { [key: string]: any; }) {
     // reflect any attributes that need to be reflected (reflect === true)
     // and dispatch any events (notify === true)
     // update internal data allowing for partial updates
     this.__data = Object.assign({}, this.__data, newData);
     for(let key in newData) {
-      // @ts-ignore
-      const cprop = this.constructor.properties[key];
+      const cprop = Object.getPrototypeOf(this).constructor.properties[key];
       if (cprop.reflect) {
         const attribute = serializeAttribute(newData[key]);
         if (attribute === null) {
@@ -146,33 +134,20 @@ class SMElement extends HTMLElement {
     this.requestRender_();
   }
 
-  connectedCallback() {
+  protected connectedCallback() {
     // initialze data
-    // @ts-ignore
-    this.initializeData_(this.constructor.properties);
+    this.initializeData_(Object.getPrototypeOf(this).constructor.properties);
     // set initial state
-    // @ts-ignore
-    this.transitionTo_(this.getStateByName_(this.constructor.machine.initial));
+    this.transitionTo_(this.getStateByName_(Object.getPrototypeOf(this).constructor.machine.initial));
   }
 
-  /**
-   * @description creates a shadowRoot by default. override to use a different render target
-   * @protected
-   */
-  createRenderRoot() {
+  protected createRenderRoot() {
     this.root = this.attachShadow({mode:'open'});
   }
 
-  /**
-   * @param {!string} name
-   * @param {string} oldVal
-   * @param {string} newVal
-   */
-  attributeChangedCallback(name, oldVal, newVal) {
-    // @ts-ignore
-    const propName = this.constructor.__propNamesAndAttributeNames.get(name);
-    // @ts-ignore
-    const type = this.constructor.properties[propName]['type'] || String;
+  protected attributeChangedCallback(name: string, oldVal:string , newVal:string|undefined) {
+    const propName = Object.getPrototypeOf(this).constructor.__propNamesAndAttributeNames.get(name);
+    const type = Object.getPrototypeOf(this).constructor.properties[propName].type || String;
     let value;
     if (type === Boolean) {
       if (newVal === ''){
@@ -187,44 +162,35 @@ class SMElement extends HTMLElement {
     }
     // only update property if it's changed to prevent infinite loops
     // with reflected properties.
-    if (value !== oldVal && propName && value !== this[propName]) {
-      this[propName] = value;
+    const self: {[key:string]:any} = this;
+    if (value !== oldVal && propName && value !== self[propName]) {
+      self[propName] = value;
     }
   }
 
-  /**
-   * @param {!State} current
-   * @param {!State} desired
-   * @return {boolean}
-   */
-  isState(current, desired) {
+
+  isState(current: State, desired: State) {
     return Boolean(current && desired && current.name === desired.name);
   }
 
   /**
-   * @param {!State} current
-   * @param {...State} states
-   * @return {boolean}
+   * @description return true if the current state is one of the supplied states
    */
-  oneOfState(current, ...states) {
+  oneOfState(current: State, ...states: Array<State>) {
     return Boolean(states && states.includes(current));
   }
 
   /**
    * @description reflects the render(data) function of the current state.
-   * @param {Object<string, any>} data
-   * @return {TemplateResult}
    */
-  currentStateRender(data) {
+  currentStateRender(_data:{[key: string]: any}): TemplateResult {
     return html``;
   }
 
   /**
    * @description override in sub classes, defaults to calling the currentStateRender
-   * @param {!object} data
-   * @return {TemplateResult}
    */
-  render(data) {
+  render(data: {[key: string]: any}): TemplateResult {
     return this.currentStateRender(data);
   }
 
@@ -232,7 +198,7 @@ class SMElement extends HTMLElement {
    * @param {!string} eventName
    * @param {object=} detail
    */
-  send(eventName, detail = {}) {
+  send(eventName: string, detail: {[key: string]: any} = {}) {
     if (!eventName) {
       throw new Error('an event name is required to send!');
     }
@@ -240,7 +206,7 @@ class SMElement extends HTMLElement {
       throw new Error(`cannot send with no state: ${eventName}`);
     }
     // find the appropriate transitions in the current state
-    const transitions = this.currentState.transitions.filter(t => t.event === eventName);
+    const transitions = this.currentState.transitions.filter((t:Transition) => t.event === eventName);
     // no matching transitions in this state
     if (transitions.length === 0) {
       console.warn(`no transitions found in current state: "${this.state}" for event: "${eventName}"`);
@@ -249,13 +215,13 @@ class SMElement extends HTMLElement {
     // with multiple transitions handling the same event,
     // check each transition for conditions and throw an error,
     // for now, if any transition does not have a condition.
-    if (transitions.length > 1 && transitions.filter(t => !t.condition).length > 0) {
+    if (transitions.length > 1 && transitions.filter((t:Transition) => !t.condition).length > 0) {
       throw new Error(
         `multiple transitions found without a condition for event: ${eventName} in state: ${this.state}`);
     }
     // if multiple transitions, run the first one that has a condition that returns true.
     if (transitions.length > 1) {
-      transitions.some(t => {
+      transitions.some((t:Transition) => {
         const passed = t.condition.call(this, detail);
         if (passed) {
           const nextState = this.getStateByName_(t.target);
@@ -294,19 +260,13 @@ class SMElement extends HTMLElement {
 
   /**
    * @description convenience for setting event listeners that call send
-   * @param {!string} eventName
-   * @param {object=} detail
-   * @return {function()}
    */
-  listenAndSend(eventName, detail) {
+  listenAndSend(eventName: string, detail: {[key: string]: any} = {}) {
     return () => this.send(eventName, detail);
   }
 
-  /**
-   * @param {!State} newState
-   * @private
-  */
-  transitionTo_(newState) {
+
+  private transitionTo_(newState: State) {
     if (!newState) {
       throw new Error('transitionTo_ called without a State');
     }
@@ -324,45 +284,34 @@ class SMElement extends HTMLElement {
     }
     this.requestRender_();
   }
-  /**
-   * @param {!string} name
-   * @return {?State}
-   * @private
-   */
-  getStateByName_(name) {
+
+  private getStateByName_(name: string): (State|null) {
     // using Object.keys.map instead of Object.values, because not every browser
     // supports Object.values
-    return Object.keys(this.states).map(k => this.states[k]).find(s => s.name === name) || null;
+    return Object.keys(this.states).map((k: string) => this.states[k]).find(s => s.name === name) || null;
   }
 
-  /**
-   * @param {!object} properties
-   * @private
-   */
-  initializeData_(properties) {
+  private initializeData_(properties: {[key: string]: any}) {
     // flatten properties and assign
-    this.data = Object.keys(properties).reduce((acc, k) => {
+    this.data = Object.keys(properties).reduce((acc: {[key: string]: any}, k) => {
       // this happens AFTER props MAY have been set, so use local prop if exists
-      const local = this[k];
+      const self = this as {[key: string]: any};
+      const local = self[k];
       const def = typeof properties[k].value === 'function' ? properties[k].value() : properties[k].value;
       acc[k] = local !== undefined ? local : def;
       return acc;
     }, {});
   }
 
-  /**
-   * @param {!object} properties
-   * @private
-   */
-  initializeProps_(properties) {
+  private initializeProps_(properties:{[key: string]: string}) {
     // create getter/setter pairs for each property
-    const init = (/** @type {string}*/ key) => {
+    const init = (key: string) => {
       Object.defineProperty(this, key, {
         get() {
           return this.data[key];
         },
         set(newVal) {
-          const update = {};
+          const update: {[key: string]: any} = {};
           update[key] = newVal;
           this.data = update;
         }
@@ -375,9 +324,8 @@ class SMElement extends HTMLElement {
 
   /**
    * @description request a render on the next animation frame
-   * @protected
    */
-  requestRender_() {
+  protected requestRender_() {
     if (this.__renderRequest) {
       cancelAnimationFrame(this.__renderRequest);
     }
@@ -393,4 +341,4 @@ class SMElement extends HTMLElement {
 };
 
 export default SMElement;
-export {html};
+export {html, Machine, State, Transition};
