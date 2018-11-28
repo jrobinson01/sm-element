@@ -94,7 +94,7 @@ class SMElement extends HTMLElement {
                 }));
             }
         }
-        this.requestRender_();
+        this.requestRender();
     }
     connectedCallback() {
         // initialze data
@@ -238,7 +238,7 @@ class SMElement extends HTMLElement {
         if (newState.onEntry) {
             newState.onEntry.call(this);
         }
-        this.requestRender_();
+        this.requestRender();
     }
     getStateByName_(name) {
         // using Object.keys.map instead of Object.values, because not every browser
@@ -277,7 +277,7 @@ class SMElement extends HTMLElement {
     /**
      * @description request a render on the next animation frame
      */
-    requestRender_() {
+    requestRender() {
         if (this.__renderRequest) {
             cancelAnimationFrame(this.__renderRequest);
         }

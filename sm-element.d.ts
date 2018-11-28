@@ -1,18 +1,18 @@
 import { html, TemplateResult } from 'lit-html/lit-html';
-interface Transition {
+export interface Transition {
     event: string;
     target: string;
     effect?(detail: object): object;
     condition?(detail: object): boolean;
 }
-interface State {
+export interface State {
     name: string;
     transitions: Array<Transition>;
     render?(data: object): TemplateResult;
     onEntry?(): void;
     onExit?(): void;
 }
-interface Machine {
+export interface Machine {
     initial: string;
     states: {
         [key: string]: State;
@@ -78,7 +78,7 @@ declare class SMElement extends HTMLElement {
     /**
      * @description request a render on the next animation frame
      */
-    protected requestRender_(): void;
+    protected requestRender(): void;
 }
 export default SMElement;
-export { html, Machine, State, Transition };
+export { html };

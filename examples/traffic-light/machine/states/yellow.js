@@ -1,7 +1,8 @@
 import {stateNames, eventNames} from '../const.js';
 import {html} from '../../../../sm-element';
 
-export default {
+/** @type import('../../../../sm-element').State */
+const state = {
   name: stateNames.YELLOW,
   onEntry() {
     this.color = 'yellow';
@@ -22,3 +23,5 @@ export default {
     return html`don't walk`;
   }
 };
+
+export default state;

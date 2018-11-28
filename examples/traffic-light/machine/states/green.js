@@ -1,8 +1,9 @@
 import {stateNames, eventNames} from '../const.js';
 import {html} from '../../../../sm-element';
-
-export default {
+/** @type import('../../../../sm-element').State */
+const state = {
   name: stateNames.GREEN,
+  /** @this {{color:string, greendDelay:number}} */
   onEntry() {
     this.color = 'green';
     setTimeout(() => {
@@ -19,3 +20,4 @@ export default {
     return html`don't walk`;
   }
 };
+export default state;
