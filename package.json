@@ -1,6 +1,6 @@
 {
   "name": "sm-element",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "state machine backed custom element base class, with lit-html rendering",
   "main": "sm-element.js",
   "module": "sm-element.js",
