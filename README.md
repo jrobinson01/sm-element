@@ -88,8 +88,8 @@ static get machine() {
       },
       loading: {
         name: 'loading',
-        onEntry: function() {
-          this.doSearch(this.searchInput)
+        onEntry: function({searchInput}) {
+          this.doSearch(searchInput)
           .then(result => {
             this.send('load_success', {result});
           })
@@ -142,11 +142,14 @@ static get machine() {
 ```
 By adding another state and a few actions and effects, we can start to make the machine more useful. We added the "initial" state. Picture this as the starting point of your component. This could comprise of a simple search form. When the form is submitted, an event is sent to the machine via `this.send('submit_search')`. This triggers the transition to the "loading" state.
 
-This new state has an `onEntry` action which kicks off an asynchronous "doSearch" operation when the state is entered (onEntry is called in the scope of your component instance, so cannot be an arrow function). When that operation resolves or rejects, we call send again with the appropriate event. The machine then transitions to the appropriate state (success or error). Notice the event is sent with the results of the operation (search results, or an error) which is simply returned by the effect function for the transition, causing an update to the components data.
+This new state has an `onEntry(data)` action which kicks off an asynchronous "doSearch" operation when the state is entered. When that operation resolves or rejects, we call send again with the appropriate event. The machine then transitions to the appropriate state (success or error). Notice the event is sent with the results of the operation (search results, or an error) which is simply returned by the effect function for the transition, causing an update to the components data.
 
-States can also define an `onExit` action but that is not demonstrated here.
+States can also define an `onExit(data)` action but that is not demonstrated here.
 
-Notice that the transitions have a function labeled "effect". These effects should return any updates we want to make to the components data. Updating the component's data triggers a render call automatically. In this case, we return the results of the search operation on success, and any error messages if the request fails.
+ ***onEntry and onExit are called in the scope of your component instance, so cannot be arrow functions***.
+
+## Effects
+Notice that the transitions have a function labeled "effect". These effects should return any updates we want to make to the components data. Updating the component's data triggers a render cycle automatically. In this case, we return the results of the search operation on success, and any error messages if the request fails.
 
 Now, suppose the search operation takes a long time, and during the "loading" state, there's a cancel button that when clicked, sends a "cancel_search" event. The loading state honors this event and transitions to the "initial" state. But what happens when that doSearch promise eventually resolves?
 
@@ -155,12 +158,14 @@ Nothing! The "initial" state doesn't care about the "load_success" or "load_erro
 ## Conditions
 Transitions can also provide a condition function. If provided, this function will be run when the machine receives an event is handles. The transition will only continue if this function returns true. This is useful when you want to handle the same event different ways. For example, in the fictitious search component above, if the search results came back empty, you might want to move to an "empty_list" state instead of the "results" state. If multiple transitions are defined with the same event, they must all provide a condition (this may change in future versions). The first transition who's condition returns true will be taken.
 
+## Self-Transitions
+You can define transitions that don't exit the current state (and therefore, don't enter a new state) by simply omitting the `target` property. Self-transitions can have conditions and effects just like regular transitions. These are useful for keeping data mutations under the control of the machine.
 
 ## Rendering
 Your render function will be called any time the component's data changes. This is quite similar to how Polymer.Element and LitElement components work. Your render function will also be called any time there's a state transition, but will only be called once if both happen in the same frame. Each individual state can also optionally provide it's own `render` function. The component's `currentStateRender` function will point to the current state's render function for use in your main render function. This is essentially a short-hand alternative to use `isState(...)` and a conditional inside your main render function. In fact, the default render function in the super class will render your state's ui automatically if you don't provide a render function in your subclass.
 
 ### Render scheduling
-Rendering is queued for the next animation frame by default. If for whatever reason you want to change this you can override `requestRender_` and implement your own scheduling.
+Rendering is queued for the next animation frame by default. If for whatever reason you want to change this you can override `requestRender` and implement your own scheduling.
 
 ## Getting started
 If you want to get started using SMElement in your own project, install the module `npm install --save sm-element` and import it `import SMElement from 'sm-element/sm-element'`
