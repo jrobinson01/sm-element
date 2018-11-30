@@ -109,14 +109,23 @@ class SMElement extends HTMLElement {
   }
 
   set data(newData: { [key: string]: any; }) {
+    const props = Object.getPrototypeOf(this).constructor.properties;
+    // only set props that are defined in 'properties'
+    const keys = Object.keys(newData);
+    const update: {[key: string]: any} = keys.reduce((acc, k) => {
+      if (props[k]) {
+        acc[k] = newData[k];
+      }
+      return acc;
+    }, {} as {[key: string]: any});
+    // update internal data allowing for partial updates
+    this.__data = Object.assign({}, this.__data, update);
     // reflect any attributes that need to be reflected (reflect === true)
     // and dispatch any events (notify === true)
-    // update internal data allowing for partial updates
-    this.__data = Object.assign({}, this.__data, newData);
-    for(let key in newData) {
-      const cprop = Object.getPrototypeOf(this).constructor.properties[key];
+    for(let key in update) {
+      const cprop = props[key];
       if (cprop.reflect) {
-        const attribute = serializeAttribute(newData[key]);
+        const attribute = serializeAttribute(update[key]);
         if (attribute === null) {
           this.removeAttribute(key);
         } else {
