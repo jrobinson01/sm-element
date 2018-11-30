@@ -252,10 +252,10 @@ class SMElement extends HTMLElement {
           // update data with return from effect
           this.data = transition.effect.call(this, detail);
         }
-      }
-      // if there is a targetState, transition to it.
-      if (targetState) {
-        this.transitionTo_(targetState);
+        // if there is a targetState, transition to it.
+        if (targetState) {
+          this.transitionTo_(targetState);
+        }
       }
     }
   }
