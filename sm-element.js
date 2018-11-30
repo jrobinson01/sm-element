@@ -102,6 +102,9 @@ class SMElement extends HTMLElement {
         // set initial state
         this.transitionTo_(this.getStateByName_(Object.getPrototypeOf(this).constructor.machine.initial));
     }
+    disconnectedCallback() {
+        // nothing to do here. provided for subclasses calling super.disconnectedCallback
+    }
     createRenderRoot() {
         this.root = this.attachShadow({ mode: 'open' });
     }
@@ -182,16 +185,14 @@ class SMElement extends HTMLElement {
                 if (passed) {
                     const nextState = this.getStateByName_(t.target);
                     // before running the transition, run it's effect
+                    if (t.effect) {
+                        // update data with return from effect
+                        this.data = t.effect.call(this, detail);
+                    }
+                    // if there is a nextState, transition to it.
                     if (nextState) {
-                        if (t.effect) {
-                            // update data with return from effect
-                            this.data = t.effect.call(this, detail);
-                        }
                         // run the first passing transition
                         this.transitionTo_(nextState);
-                    }
-                    else {
-                        throw new Error(`no target state found for transition: ${t}`);
                     }
                 }
                 return passed; // break out of loop if true, before testing more conditions
@@ -201,18 +202,16 @@ class SMElement extends HTMLElement {
             // only one transition, check for condition first
             const transition = transitions[0];
             const targetState = this.getStateByName_(transition.target);
-            if (targetState) {
-                // no condition, or condition returns true
-                if (!transition.condition || (transition.condition && transition.condition.call(this, detail))) {
-                    if (transition.effect) {
-                        // update data with return from effect
-                        this.data = transition.effect.call(this, detail);
-                    }
-                    this.transitionTo_(targetState);
+            // no condition, or condition returns true
+            if (!transition.condition || (transition.condition && transition.condition.call(this, detail))) {
+                if (transition.effect) {
+                    // update data with return from effect
+                    this.data = transition.effect.call(this, detail);
                 }
             }
-            else {
-                throw new Error(`no target state found for transition: ${transition}`);
+            // if there is a targetState, transition to it.
+            if (targetState) {
+                this.transitionTo_(targetState);
             }
         }
     }
@@ -228,7 +227,7 @@ class SMElement extends HTMLElement {
         }
         // call onExit if exists
         if (this.currentState && this.currentState.onExit) {
-            this.currentState.onExit.call(this);
+            this.currentState.onExit.call(this, this.data);
         }
         this.currentState = newState;
         this.currentStateRender = newState.render || function () { return html ``; };
@@ -236,7 +235,7 @@ class SMElement extends HTMLElement {
         this.state = newState.name;
         // call onEntry if it exists
         if (newState.onEntry) {
-            newState.onEntry.call(this);
+            newState.onEntry.call(this, this.data);
         }
         this.requestRender();
     }
@@ -267,7 +266,8 @@ class SMElement extends HTMLElement {
                     const update = {};
                     update[key] = newVal;
                     this.data = update;
-                }
+                },
+                enumerable: true,
             });
         };
         for (let key in properties) {
@@ -284,6 +284,10 @@ class SMElement extends HTMLElement {
         this.__renderRequest = requestAnimationFrame(() => {
             if (this.root) {
                 render(this.render(this.data), this.root);
+                // should send 'rendered'. how would this work if someone wanted to override requestRender?
+                // can it be a requirement that requestRender return a promise that resolves
+                // after render is called? probably not, since multiple things call requestRender..?
+                // ...
             }
             else {
                 throw new Error('attempted to render while "this.root" is undefined');

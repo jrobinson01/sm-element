@@ -2,15 +2,27 @@ import { html, TemplateResult } from 'lit-html/lit-html';
 export interface Transition {
     event: string;
     target: string;
-    effect?(detail: object): object;
-    condition?(detail: object): boolean;
+    effect?(detail: {
+        [key: string]: any;
+    }): {
+        [key: string]: any;
+    };
+    condition?(detail: {
+        [key: string]: any;
+    }): boolean;
 }
 export interface State {
     name: string;
     transitions: Array<Transition>;
-    render?(data: object): TemplateResult;
-    onEntry?(): void;
-    onExit?(): void;
+    render?(data: {
+        [key: string]: any;
+    }): TemplateResult;
+    onEntry?(data: {
+        [key: string]: any;
+    }): void;
+    onExit?(data: {
+        [key: string]: any;
+    }): void;
 }
 export interface Machine {
     initial: string;
@@ -39,6 +51,7 @@ declare class SMElement extends HTMLElement {
         [s: string]: any;
     };
     protected connectedCallback(): void;
+    protected disconnectedCallback(): void;
     protected createRenderRoot(): void;
     protected attributeChangedCallback(name: string, oldVal: string, newVal: string | undefined): void;
     isState(current: State, desired: State): boolean;
