@@ -142,6 +142,7 @@ describe('SMElement', () => {
       const sentDetail = {};
       el.currentState.transitions[0].effect = function(detail) {
         expect(detail).to.equal(sentDetail);
+        return detail;
       };
       el.send('toggle', sentDetail);
     });
@@ -220,11 +221,13 @@ describe('SMElement', () => {
     // ...
   });
 
-  describe('property change events', () => {
-
-  });
-
   describe('property setters', () => {
+    it('should set the property', () => {
+
+    });
+    it('should send an event', () => {
+
+    });
 
   });
 

@@ -53,6 +53,10 @@ class SMElement extends HTMLElement {
     this.createRenderRoot();
     // setup property getter/setters
     this.initializeProps_(Object.getPrototypeOf(this).constructor.properties);
+    // initialze data
+    this.initializeData_(Object.getPrototypeOf(this).constructor.properties);
+    // set initial state
+    this.transitionTo_(this.getStateByName_(Object.getPrototypeOf(this).constructor.machine.initial));
   }
 
   static get machine(): Machine {
@@ -95,7 +99,10 @@ class SMElement extends HTMLElement {
 
   set state(state: string) {
     this.__state = state;
-    this.setAttribute('state', this.__state);
+    // cannot set attributes unless connected
+    if (this.isConnected) {
+      this.setAttribute('state', this.__state);
+    }
     // dispatch state-changed event
     this.dispatchEvent(new CustomEvent('state-changed', {
       detail: {
@@ -144,10 +151,10 @@ class SMElement extends HTMLElement {
   }
 
   protected connectedCallback() {
-    // initialze data
-    this.initializeData_(Object.getPrototypeOf(this).constructor.properties);
-    // set initial state
-    this.transitionTo_(this.getStateByName_(Object.getPrototypeOf(this).constructor.machine.initial));
+    // ensure state attribute is in sync
+    if (this.getAttribute('state') !== this.__state) {
+      this.setAttribute('state', this.__state);
+    }
   }
 
   protected disconnectedCallback() {
