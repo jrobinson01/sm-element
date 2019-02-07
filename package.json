@@ -1,6 +1,6 @@
 {
   "name": "sm-element",
-  "version": "0.0.19",
+  "version": "1.0.0",
   "description": "state machine backed custom element base class, with lit-html rendering",
   "main": "sm-element.js",
   "module": "sm-element.js",
@@ -19,7 +19,7 @@
   "author": "jrobinsonmedia@gmail.com",
   "license": "ISC",
   "dependencies": {
-    "lit-html": "^0.14.0"
+    "lit-html": "^1.0.0"
   },
   "devDependencies": {
     "@webcomponents/webcomponentsjs": "^2.1.3",
