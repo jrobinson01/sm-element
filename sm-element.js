@@ -110,7 +110,7 @@ class SMElement extends HTMLElement {
                 }));
             }
             // if prop provides an event, send it along with the new value
-            if (cprop.event) {
+            if (cprop.event && this.currentState) {
                 this.send(cprop.event, {
                     value: newData[key],
                 });
