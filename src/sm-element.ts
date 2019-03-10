@@ -146,6 +146,12 @@ class SMElement extends HTMLElement {
           }
         }));
       }
+      // if prop provides an event, send it along with the new value
+      if (cprop.event) {
+        this.send(cprop.event, {
+          value: newData[key],
+        });
+      }
     }
     this.requestRender();
   }
@@ -248,7 +254,8 @@ class SMElement extends HTMLElement {
           // before running the transition, run it's effect
           if (t.effect) {
             // update data with return from effect
-            this.data = t.effect.call(this, detail);
+            const newData = t.effect.call(this, detail);
+            this.data = newData ? newData : this.data;
           }
           // if there is a nextState, transition to it.
           if (nextState) {
