@@ -123,6 +123,8 @@ class SMElement extends HTMLElement {
         if (this.getAttribute('state') !== this.__state) {
             this.setAttribute('state', this.__state);
         }
+        // render immediately the first time
+        this.render(this.data);
     }
     disconnectedCallback() {
         // nothing to do here. provided for subclasses calling super.disconnectedCallback

@@ -161,6 +161,9 @@ class SMElement extends HTMLElement {
     if (this.getAttribute('state') !== this.__state) {
       this.setAttribute('state', this.__state);
     }
+    // render immediately the first time, so that elements
+    // can be accessed in connectedCallback()
+    this.render(this.data);
   }
 
   protected disconnectedCallback() {
