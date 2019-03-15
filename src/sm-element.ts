@@ -276,7 +276,8 @@ class SMElement extends HTMLElement {
       if (!transition.condition || (transition.condition && transition.condition.call(this, detail))) {
         if (transition.effect) {
           // update data with return from effect
-          this.data = transition.effect.call(this, detail);
+          const newData = transition.effect.call(this, detail);
+          this.data = newData ? newData : this.data;
         }
         // if there is a targetState, transition to it.
         if (targetState) {
