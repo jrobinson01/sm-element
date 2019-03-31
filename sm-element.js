@@ -24,8 +24,6 @@ class SMElement extends HTMLElement {
         this.initializeProps_(Object.getPrototypeOf(this).constructor.properties);
         // initialze data
         this.initializeData_(Object.getPrototypeOf(this).constructor.properties);
-        // set initial state
-        this.transitionTo_(this.getStateByName_(Object.getPrototypeOf(this).constructor.machine.initial));
     }
     static get machine() {
         // return a basic, single-state machine by default
@@ -123,6 +121,8 @@ class SMElement extends HTMLElement {
         if (this.getAttribute('state') !== this.__state) {
             this.setAttribute('state', this.__state);
         }
+        // set initial state
+        this.transitionTo_(this.getStateByName_(Object.getPrototypeOf(this).constructor.machine.initial));
         // render immediately the first time, so that elements
         // can be accessed in connectedCallback()
         this.render(this.data);
