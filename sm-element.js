@@ -85,6 +85,8 @@ class SMElement extends HTMLElement {
             }
             return acc;
         }, {});
+        // hold onto old values for a minute
+        const oldData = Object.assign({}, this.__data);
         // update internal data allowing for partial updates
         this.__data = Object.assign({}, this.__data, update);
         // reflect any attributes that need to be reflected (reflect === true)
@@ -103,7 +105,8 @@ class SMElement extends HTMLElement {
             if (cprop.notify) {
                 this.dispatchEvent(new CustomEvent(`${key}-changed`, {
                     detail: {
-                        value: newData[key]
+                        value: newData[key],
+                        oldValue: oldData[key]
                     }
                 }));
             }
@@ -111,7 +114,12 @@ class SMElement extends HTMLElement {
             if (cprop.event && this.currentState) {
                 this.send(cprop.event, {
                     value: newData[key],
+                    oldValue: oldData[key]
                 });
+            }
+            // if prop provides an observer, call it
+            if (cprop.observer && typeof cprop.observer === 'function') {
+                cprop.observer.call(this, newData[key], oldData[key]);
             }
         }
         this.requestRender();

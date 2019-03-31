@@ -13,7 +13,10 @@ class TrafficLight extends SMElement {
       color: {
         reflect: true,
         notify: true,
-        type: String
+        type: String,
+        observer(newVal, oldVal) {
+          console.log('color observer', newVal, oldVal);
+        },
       },
       yellowDelay: {
         value: 1000,
